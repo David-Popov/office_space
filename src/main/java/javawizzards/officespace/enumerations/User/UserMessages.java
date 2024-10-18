@@ -1,6 +1,6 @@
 package javawizzards.officespace.enumerations.User;
 
-public enum UserExceptionMessages {
+public enum UserMessages {
     USER_NOT_FOUND("User not found."),
     GOOGLE_USER_NOT_FOUND("Google User not found."),
     EMAIL_ALREADY_EXISTS("Email is already registered."),
@@ -21,7 +21,7 @@ public enum UserExceptionMessages {
 
     private final String message;
 
-    UserExceptionMessages(String message) {
+    UserMessages(String message) {
         this.message = message;
     }
 
