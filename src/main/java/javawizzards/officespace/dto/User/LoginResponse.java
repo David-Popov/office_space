@@ -9,9 +9,13 @@ import lombok.Setter;
 import java.io.Serializable;
 
 @NoArgsConstructor
-@AllArgsConstructor
 @Getter
 @Setter
 public class LoginResponse extends Response implements Serializable  {
     private String token;
+
+    public LoginResponse(String errorDescription) {
+        super(errorDescription);
+        this.token = "";
+    }
 }

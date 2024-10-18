@@ -2,7 +2,7 @@ package javawizzards.officespace.controller;
 
 import javawizzards.officespace.dto.Response.Response;
 import javawizzards.officespace.dto.User.*;
-import javawizzards.officespace.entity.User;
+import javawizzards.officespace.enumerations.User.UserExceptionMessages;
 import javawizzards.officespace.service.User.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -33,10 +33,10 @@ public class AuthenticationController {
             var registeredUser = this.userService.registerUser(registerUserDto);
 
             if (registeredUser == null) {
-                return ResponseEntity.badRequest().body(new Response("User registration failed"));
+                return ResponseEntity.badRequest().body(new Response(UserExceptionMessages.REGISTER_FAILED.getMessage()));
             }
 
-            return ResponseEntity.ok(new Response("User registration successful"));
+            return ResponseEntity.ok(new Response(UserExceptionMessages.REGISTER_SUCCESS.getMessage()));
         }
         catch(Exception e){
             return ResponseEntity.internalServerError().body(new Response(e.getMessage()));
@@ -53,10 +53,10 @@ public class AuthenticationController {
             var registeredUser = this.userService.registerGoogleUser(registerUserDto);
 
             if (registeredUser == null) {
-                return ResponseEntity.badRequest().body(new Response("User registration failed"));
+                return ResponseEntity.badRequest().body(new Response(UserExceptionMessages.REGISTER_FAILED.getMessage()));
             }
 
-            return ResponseEntity.ok(new Response("User registration successful"));
+            return ResponseEntity.ok(new Response(UserExceptionMessages.REGISTER_SUCCESS.getMessage()));
         }
         catch(Exception e){
             return ResponseEntity.internalServerError().body(new Response(e.getMessage()));
@@ -73,7 +73,7 @@ public class AuthenticationController {
             String token = this.userService.loginUser(loginUserDto);
 
             if (token.isEmpty()){
-                return ResponseEntity.badRequest().body(new LoginResponse("User login failed"));
+                return ResponseEntity.badRequest().body(new LoginResponse(UserExceptionMessages.USER_NOT_FOUND.getMessage()));
             }
 
             return ResponseEntity.ok(new LoginResponse(token));
@@ -93,7 +93,7 @@ public class AuthenticationController {
             String token = this.userService.loginGoogleUser(loginUserDto);
 
             if (token.isEmpty()){
-                return ResponseEntity.badRequest().body(new LoginResponse("User login failed"));
+                return ResponseEntity.badRequest().body(new LoginResponse(UserExceptionMessages.USER_NOT_FOUND.getMessage()));
             }
 
             return ResponseEntity.ok(new LoginResponse(token));

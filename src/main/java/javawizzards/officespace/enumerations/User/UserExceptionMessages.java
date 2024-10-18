@@ -16,7 +16,8 @@ public enum UserExceptionMessages {
     USER_ALREADY_LOGGED_IN("User is already logged in."),
     ROLE_NOT_FOUND("User role not found."),
     USER_DELETED("User account has been deleted."),
-    REGISTER_FAILED("Failed to register user");
+    REGISTER_FAILED("Failed to register user"),
+    REGISTER_SUCCESS("User registered successfully"),;
 
     private final String message;
 
