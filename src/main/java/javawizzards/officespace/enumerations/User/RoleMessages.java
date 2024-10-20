@@ -1,6 +1,6 @@
 package javawizzards.officespace.enumerations.User;
 
-public enum RoleExceptionMessages {
+public enum RoleMessages {
     ROLE_NOT_FOUND("Role not found."),
     ROLE_ALREADY_EXISTS("Role already exists."),
     INVALID_ROLE_NAME("Role name is invalid."),
@@ -8,7 +8,7 @@ public enum RoleExceptionMessages {
 
     private final String message;
 
-    RoleExceptionMessages(String message) {
+    RoleMessages(String message) {
         this.message = message;
     }
 

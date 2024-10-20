@@ -94,7 +94,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
             return this.MapUserToDto(user);
         } catch (Exception e) {
-            throw new UserCustomException.RegisterFailed();
+            throw e;
         }
     }
 
@@ -118,7 +118,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
             return this.MapUserToDto(user);
         } catch (Exception e) {
-            throw new UserCustomException.RegisterFailed();
+            throw e;
         }
     }
 
@@ -138,7 +138,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             return this.jwtUtility.generateNormalUserToken(user);
         }
         catch (Exception e){
-            throw new UserCustomException.RegisterFailed();
+            throw e;
         }
     }
 
@@ -154,7 +154,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             return this.jwtUtility.generateGoogleUserToken(user);
         }
         catch (Exception e){
-            throw new UserCustomException.RegisterFailed();
+            throw e;
         }
     }
 

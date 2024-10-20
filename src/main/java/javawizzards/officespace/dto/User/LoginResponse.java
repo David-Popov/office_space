@@ -8,14 +8,13 @@ import lombok.Setter;
 
 import java.io.Serializable;
 
-@NoArgsConstructor
+
 @Getter
 @Setter
-public class LoginResponse extends Response implements Serializable  {
+public class LoginResponse implements Serializable  {
     private String token;
 
-    public LoginResponse(String errorDescription) {
-        super(errorDescription);
+    public LoginResponse() {
         this.token = "";
     }
 }
