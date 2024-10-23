@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.UUID;
+import java.util.logging.Logger;
 
 @Service
 public class UserServiceImpl implements UserService, UserDetailsService {
@@ -26,6 +27,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     private final BCryptPasswordEncoder passwordEncoder;
     private final RoleService roleService;
     private final JwtUtility jwtUtility;
+    private final Logger logger;
 
     public UserServiceImpl(UserRepository userRepository, ModelMapper modelMapper, BCryptPasswordEncoder passwordEncoder, RoleService roleService, JwtUtility jwtUtility) {
         this.userRepository = userRepository;
@@ -33,6 +35,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         this.passwordEncoder = passwordEncoder;
         this.roleService = roleService;
         this.jwtUtility = jwtUtility;
+        this.logger = Logger.getLogger(this.getClass().getName());
     }
 
     @Override
