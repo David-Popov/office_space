@@ -48,6 +48,26 @@ public class RequestAndResponseServiceImpl implements RequestAndResponseService{
     }
 
     @Override
+    public <T> void CreateRequestAndResponse(T data, Response<?> response, String controllerName, String methodName) {
+        try{
+            RequestAndResponse requestAndResponse = new RequestAndResponse();
+            requestAndResponse.setDate(LocalDateTime.now());
+            requestAndResponse.setControllerName(controllerName);
+            requestAndResponse.setMethodName(methodName);
+            requestAndResponse.setRequestId(data.toString());
+            requestAndResponse.setRequestData("Route parameter: " + data.toString());
+            requestAndResponse.setResponseId(response.getResponseId());
+            requestAndResponse.setResponseData(this.objectMapper.writeValueAsString(response.getData()));
+            requestAndResponse.setResponseData(response.getErrorDescription());
+
+
+            this.requestAndResponseRepository.save(requestAndResponse);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
     public List<RequestAndResponse> GetRequestsAndResponses() {
         try{
             return this.requestAndResponseRepository.findAll();

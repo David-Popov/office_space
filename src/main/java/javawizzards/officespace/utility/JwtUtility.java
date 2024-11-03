@@ -4,6 +4,7 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import javawizzards.officespace.entity.User;
+import javawizzards.officespace.enumerations.User.RoleEnum;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -94,6 +95,26 @@ public class JwtUtility {
                 .parseClaimsJws(token)
                 .getBody()
                 .get("username", String.class);
+    }
+
+    public String extractRole(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .get("roleName", String.class);
+    }
+
+    public boolean checkForAdminRole(String token) {
+        var roleName = Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .get("roleName", String.class);
+
+        return roleName.equals(RoleEnum.ADMIN.getRoleName());
     }
 
     public Map<String, Object> extractAllClaims(String token) {
