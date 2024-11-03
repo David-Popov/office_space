@@ -17,7 +17,9 @@ public enum UserMessages {
     ROLE_NOT_FOUND("User role not found."),
     USER_DELETED("User account has been deleted."),
     REGISTER_FAILED("Failed to register user"),
-    REGISTER_SUCCESS("User registered successfully"),;
+    REGISTER_SUCCESS("User registered successfully"),
+    PASSWORD_CHANGED_SUCCESS("Password was changed successfully"),
+    USER_UPDATE_SUCCESS("User was updated successfully");
 
     private final String message;
 

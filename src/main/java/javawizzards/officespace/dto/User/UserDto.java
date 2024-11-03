@@ -3,10 +3,22 @@ package javawizzards.officespace.dto.User;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.io.Serializable;
+import java.util.UUID;
 
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class UserDto implements Serializable {
+    @JsonProperty("Id")
+    private UUID id;
+
     @NotNull(message = "Email can't be null")
     @Email(message = "Email is invalid")
     @JsonProperty("email")
