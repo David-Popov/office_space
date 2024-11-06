@@ -23,6 +23,9 @@ public class JwtUtility {
     @Value("${security.jwt.expiration-time}")
     private long expirationTime;
 
+    @Value("${security.jwt.refresh-token-expiration-time}")
+    private long refreshTokenExpirationTime;
+
     private Key getSigningKey() {
         return new SecretKeySpec(SECRET_KEY.getBytes(StandardCharsets.UTF_8), SignatureAlgorithm.HS256.getJcaName());
     }
@@ -31,19 +34,14 @@ public class JwtUtility {
         Map<String, Object> claims = new HashMap<>();
         claims.put("email", user.getEmail());
         claims.put("username", user.getUsername());
-        claims.put("googleId", user.getGoogleId());
         claims.put("pictureUrl", user.getPictureUrl());
-        claims.put("phoneNumber", user.getPhone());
-        claims.put("address", user.getAddress());
-        claims.put("firstName", user.getFirstName());
-        claims.put("lastName", user.getLastName());
         claims.put("roleId", user.getRole().getId());
         claims.put("roleName", user.getRole().getName());
 
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(user.getEmail())
-                .setIssuedAt(new Date())
+                .setIssuedAt(new Date())//add Issuer
                 .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
@@ -63,6 +61,20 @@ public class JwtUtility {
                 .setSubject(user.getEmail())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    public String generateRefreshToken(User user) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("email", user.getEmail());
+        claims.put("username", user.getUsername());
+
+        return Jwts.builder()
+                .setClaims(claims)
+                .setSubject(user.getEmail())
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + refreshTokenExpirationTime))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }

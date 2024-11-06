@@ -89,8 +89,8 @@ public class AuthenticationController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Response<String>> loginUser(@RequestBody Request<LoginUserDto> loginUserDto, BindingResult bindingResult) throws JsonProcessingException {
-        Response<String> response;
+    public ResponseEntity<Response<?>> loginUser(@RequestBody Request<LoginUserDto> request, BindingResult bindingResult) throws JsonProcessingException {
+        Response<LoginResponse> response;
 
         if (bindingResult.hasErrors()) {
             String errorMessage = Objects.requireNonNull(bindingResult.getFieldError()).getDefaultMessage();
@@ -98,20 +98,49 @@ public class AuthenticationController {
         }
 
         try {
-            String token = this.userService.loginUser(loginUserDto.getData());
-            if (token.isEmpty()) {
+            LoginResponse loginResponse = this.userService.loginUser(request.getData());
+            if (loginResponse.getToken().isEmpty() || loginResponse.getRefreshToken().isEmpty()) {
                 response = new Response<>(UserMessages.USER_NOT_FOUND.getMessage());
-                this.requestAndResponseService.CreateRequestAndResponse(loginUserDto, response, LoggingUtils.logControllerName(this),LoggingUtils.logMethodName());
+                this.requestAndResponseService.CreateRequestAndResponse(request, response, LoggingUtils.logControllerName(this),LoggingUtils.logMethodName());
                 return ResponseEntity.badRequest().body(response);
             }
 
-            response = new Response<>(token, HttpStatus.OK, UserMessages.REGISTER_SUCCESS.getMessage());
-            this.requestAndResponseService.CreateRequestAndResponse(loginUserDto, response, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
+            response = new Response<>(loginResponse, HttpStatus.OK, UserMessages.REGISTER_SUCCESS.getMessage());
+            this.requestAndResponseService.CreateRequestAndResponse(request, response, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
             return ResponseEntity.ok(response);
 
         } catch (Exception e) {
             response = new Response<>(e.getMessage());
-            this.requestAndResponseService.CreateRequestAndResponse(loginUserDto, response, LoggingUtils.logControllerName(this),LoggingUtils.logMethodName());
+            this.requestAndResponseService.CreateRequestAndResponse(request, response, LoggingUtils.logControllerName(this),LoggingUtils.logMethodName());
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
+
+    @PostMapping("/refresh-token")
+    public ResponseEntity<Response<?>> refreshToken(@RequestBody Request<RefreshTokenRequest> request, BindingResult bindingResult) throws JsonProcessingException {
+        Response<?> response;
+
+        if (bindingResult.hasErrors()) {
+            String errorMessage = Objects.requireNonNull(bindingResult.getFieldError()).getDefaultMessage();
+            return ResponseEntity.badRequest().body(new Response<>(errorMessage));
+        }
+
+        try{
+            LoginResponse loginResponse = this.userService.checkIfRefreshTokenIsValidAndGenerateNewTokens(request.getData().getEmail(), request.getData().getRefreshToken());
+
+            if (loginResponse.getToken().isEmpty() || loginResponse.getRefreshToken().isEmpty()) {
+                response = new Response<>(UserMessages.USER_NOT_FOUND.getMessage());
+                this.requestAndResponseService.CreateRequestAndResponse(request, response, LoggingUtils.logControllerName(this),LoggingUtils.logMethodName());
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            response = new Response<>(loginResponse, HttpStatus.OK, UserMessages.REFRESH_TOKEN_SUCCESS.getMessage());
+            this.requestAndResponseService.CreateRequestAndResponse(request, response, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            response = new Response<>(e.getMessage());
+            this.requestAndResponseService.CreateRequestAndResponse(request, response, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
             return ResponseEntity.internalServerError().body(response);
         }
     }
@@ -186,6 +215,11 @@ public class AuthenticationController {
             this.requestAndResponseService.CreateRequestAndResponse(request, response, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
             return ResponseEntity.internalServerError().body(response);
         }
+    }
+
+    @GetMapping("/message")
+    public ResponseEntity<String> changePassword() {
+        return ResponseEntity.ok().body("hello");
     }
 
     @PutMapping("/change-password")
