@@ -126,7 +126,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     }
 
     @Override
-    public String loginUser(LoginUserDto userDto) {
+    public LoginResponse loginUser(LoginUserDto userDto) {
         try{
             User user = this.userRepository.findByEmail(userDto.getEmail()).orElse(null);
 
@@ -138,10 +138,43 @@ public class UserServiceImpl implements UserService, UserDetailsService {
                 throw new UserCustomException.PasswordMismatchException();
             }
 
-            return this.jwtUtility.generateNormalUserToken(user);
+            String token = this.jwtUtility.generateNormalUserToken(user);
+            String refreshToken = this.jwtUtility.generateRefreshToken(user);
+
+            user.setRefreshToken(refreshToken);
+            this.userRepository.save(user);
+
+            LoginResponse response = new LoginResponse(token, refreshToken);
+
+            return response;
         }
         catch (Exception e){
             throw e;
+        }
+    }
+
+    @Override
+    public LoginResponse checkIfRefreshTokenIsValidAndGenerateNewTokens(String email, String refreshToken) {
+        try{
+            User user = this.userRepository.findByEmail(email).orElse(null);
+
+            if (user == null) {
+                throw new UserCustomException.UserNotFoundException();
+            }
+
+            if (refreshToken.equals(user.getRefreshToken())) {
+                String newToken = this.jwtUtility.generateNormalUserToken(user);
+                String newRefreshToken = this.jwtUtility.generateRefreshToken(user);
+
+                user.setRefreshToken(refreshToken);
+                this.userRepository.save(user);
+
+                return new LoginResponse(newToken, newRefreshToken);
+            }
+
+            return new LoginResponse();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 

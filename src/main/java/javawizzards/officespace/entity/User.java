@@ -56,6 +56,9 @@ public class User implements UserDetails {
     private String address;
 
     @Column(nullable = true)
+    private String refreshToken;
+
+    @Column(nullable = true)
     private String googleId;
 
     @Override
