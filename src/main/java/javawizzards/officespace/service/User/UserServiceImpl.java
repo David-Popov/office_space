@@ -6,6 +6,7 @@ import javawizzards.officespace.entity.User;
 import javawizzards.officespace.enumerations.User.RoleEnum;
 import javawizzards.officespace.exception.User.UserCustomException;
 import javawizzards.officespace.repository.UserRepository;
+import javawizzards.officespace.service.JwtService.JwtService;
 import javawizzards.officespace.service.Role.RoleService;
 import javawizzards.officespace.utility.JwtUtility;
 import org.modelmapper.ModelMapper;
@@ -27,14 +28,16 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     private final BCryptPasswordEncoder passwordEncoder;
     private final RoleService roleService;
     private final JwtUtility jwtUtility;
+    private final JwtService jwtService;
     private final Logger logger;
 
-    public UserServiceImpl(UserRepository userRepository, ModelMapper modelMapper, BCryptPasswordEncoder passwordEncoder, RoleService roleService, JwtUtility jwtUtility) {
+    public UserServiceImpl(UserRepository userRepository, ModelMapper modelMapper, BCryptPasswordEncoder passwordEncoder, RoleService roleService, JwtUtility jwtUtility, JwtService jwtService) {
         this.userRepository = userRepository;
         this.modelMapper = modelMapper;
         this.passwordEncoder = passwordEncoder;
         this.roleService = roleService;
         this.jwtUtility = jwtUtility;
+        this.jwtService = jwtService;
         this.logger = Logger.getLogger(this.getClass().getName());
     }
 
@@ -138,8 +141,11 @@ public class UserServiceImpl implements UserService, UserDetailsService {
                 throw new UserCustomException.PasswordMismatchException();
             }
 
-            String token = this.jwtUtility.generateNormalUserToken(user);
-            String refreshToken = this.jwtUtility.generateRefreshToken(user);
+//            String token = this.jwtUtility.generateNormalUserToken(user);
+//            String refreshToken = this.jwtUtility.generateRefreshToken(user);
+
+            String token = this.jwtService.generateNormalUserToken(user);
+            String refreshToken = this.jwtService.generateRefreshToken(user);
 
             user.setRefreshToken(refreshToken);
             this.userRepository.save(user);
@@ -163,8 +169,11 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             }
 
             if (refreshToken.equals(user.getRefreshToken())) {
-                String newToken = this.jwtUtility.generateNormalUserToken(user);
-                String newRefreshToken = this.jwtUtility.generateRefreshToken(user);
+//                String newToken = this.jwtUtility.generateNormalUserToken(user);
+//                String newRefreshToken = this.jwtUtility.generateRefreshToken(user);
+
+                String newToken = this.jwtService.generateNormalUserToken(user);
+                String newRefreshToken = this.jwtService.generateRefreshToken(user);
 
                 user.setRefreshToken(refreshToken);
                 this.userRepository.save(user);
@@ -187,7 +196,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
                 throw new UserCustomException.GoogleUserNotFoundException();
             }
 
-            return this.jwtUtility.generateGoogleUserToken(user);
+            return this.jwtService.generateGoogleUserToken(user);
         }
         catch (Exception e){
             throw e;
