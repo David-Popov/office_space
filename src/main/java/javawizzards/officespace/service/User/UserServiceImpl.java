@@ -262,6 +262,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             }
 
             user.setPassword(hashPassword(userDto.getNewPassword()));
+            this.userRepository.save(user);
         } catch (Exception e) {
             throw e;
         }
