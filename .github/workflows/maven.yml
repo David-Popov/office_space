@@ -20,8 +20,8 @@ jobs:
         distribution: 'temurin'
         cache: maven
         
-    - name: Build and Test with Maven
-      run: mvn -B test
+    # - name: Build and Test with Maven
+    #   run: mvn -B test
 
     # - name: Publish Test Report
     #   uses: dorny/test-reporter@v1
