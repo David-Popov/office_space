@@ -32,8 +32,11 @@ public class SecurityConfig {
                                 "/",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
-                                "/auth/**",
+                                "/auth/register",
+                                "/auth/login",
+                                "/notification/**",
                                 "/oauth2/**").permitAll()
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session

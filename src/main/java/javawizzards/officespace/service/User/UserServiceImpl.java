@@ -6,6 +6,7 @@ import javawizzards.officespace.entity.User;
 import javawizzards.officespace.enumerations.User.RoleEnum;
 import javawizzards.officespace.exception.User.UserCustomException;
 import javawizzards.officespace.repository.UserRepository;
+import javawizzards.officespace.service.JwtService.JwtService;
 import javawizzards.officespace.service.Role.RoleService;
 import javawizzards.officespace.utility.JwtUtility;
 import org.modelmapper.ModelMapper;
@@ -27,14 +28,16 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     private final BCryptPasswordEncoder passwordEncoder;
     private final RoleService roleService;
     private final JwtUtility jwtUtility;
+    private final JwtService jwtService;
     private final Logger logger;
 
-    public UserServiceImpl(UserRepository userRepository, ModelMapper modelMapper, BCryptPasswordEncoder passwordEncoder, RoleService roleService, JwtUtility jwtUtility) {
+    public UserServiceImpl(UserRepository userRepository, ModelMapper modelMapper, BCryptPasswordEncoder passwordEncoder, RoleService roleService, JwtUtility jwtUtility, JwtService jwtService) {
         this.userRepository = userRepository;
         this.modelMapper = modelMapper;
         this.passwordEncoder = passwordEncoder;
         this.roleService = roleService;
         this.jwtUtility = jwtUtility;
+        this.jwtService = jwtService;
         this.logger = Logger.getLogger(this.getClass().getName());
     }
 
@@ -64,7 +67,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
             return this.MapUserToDto(user);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw e;
         }
     }
 
@@ -126,7 +129,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     }
 
     @Override
-    public String loginUser(LoginUserDto userDto) {
+    public LoginResponse loginUser(LoginUserDto userDto) {
         try{
             User user = this.userRepository.findByEmail(userDto.getEmail()).orElse(null);
 
@@ -138,10 +141,49 @@ public class UserServiceImpl implements UserService, UserDetailsService {
                 throw new UserCustomException.PasswordMismatchException();
             }
 
-            return this.jwtUtility.generateNormalUserToken(user);
+//            String token = this.jwtUtility.generateNormalUserToken(user);
+//            String refreshToken = this.jwtUtility.generateRefreshToken(user);
+
+            String token = this.jwtService.generateNormalUserToken(user);
+            String refreshToken = this.jwtService.generateRefreshToken(user);
+
+            user.setRefreshToken(refreshToken);
+            this.userRepository.save(user);
+
+            LoginResponse response = new LoginResponse(token, refreshToken);
+
+            return response;
         }
         catch (Exception e){
             throw e;
+        }
+    }
+
+    @Override
+    public LoginResponse checkIfRefreshTokenIsValidAndGenerateNewTokens(String email, String refreshToken) {
+        try{
+            User user = this.userRepository.findByEmail(email).orElse(null);
+
+            if (user == null) {
+                throw new UserCustomException.UserNotFoundException();
+            }
+
+            if (refreshToken.equals(user.getRefreshToken())) {
+//                String newToken = this.jwtUtility.generateNormalUserToken(user);
+//                String newRefreshToken = this.jwtUtility.generateRefreshToken(user);
+
+                String newToken = this.jwtService.generateNormalUserToken(user);
+                String newRefreshToken = this.jwtService.generateRefreshToken(user);
+
+                user.setRefreshToken(refreshToken);
+                this.userRepository.save(user);
+
+                return new LoginResponse(newToken, newRefreshToken);
+            }
+
+            return new LoginResponse();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -154,9 +196,91 @@ public class UserServiceImpl implements UserService, UserDetailsService {
                 throw new UserCustomException.GoogleUserNotFoundException();
             }
 
-            return this.jwtUtility.generateGoogleUserToken(user);
+            return this.jwtService.generateGoogleUserToken(user);
         }
         catch (Exception e){
+            throw e;
+        }
+    }
+
+    @Override
+    public UserDto updateUser(UserDto userDto) {
+        try{
+            User userForUpdate = this.userRepository.findByEmail(userDto.getEmail()).orElse(null);
+
+            if (userForUpdate == null) {
+                throw new UserCustomException.UserNotFoundException();
+            }
+
+            userForUpdate.setFirstName(userDto.getFirstName());
+            userForUpdate.setLastName(userDto.getLastName());
+            userForUpdate.setPhone(userDto.getPhone());
+            userForUpdate.setAddress(userDto.getAddress());
+            userForUpdate.setPictureUrl(userDto.getPictureUrl());
+            userForUpdate.setUsername(userDto.getUsername());
+
+            this.userRepository.save(userForUpdate);
+
+            return this.MapUserToDto(userForUpdate);
+        } catch (Exception e) {
+            throw e;
+        }
+    }
+
+    @Override
+    public GoogleUserDto updateGoogleUser(GoogleUserDto userDto) {
+        try{
+            User userForUpdate = this.userRepository.findByGoogleId(userDto.getGoogleId()).orElse(null);
+
+            if (userForUpdate == null) {
+                throw new UserCustomException.UserNotFoundException();
+            }
+
+            userForUpdate.setUsername(userDto.getUsername());
+            userForUpdate.setPictureUrl(userDto.getPictureUrl());
+            userForUpdate.setEmail(userDto.getEmail());
+
+            this.userRepository.save(userForUpdate);
+
+            return MapUserToGoogleUserDto(userForUpdate);
+        } catch (Exception e) {
+            throw e;
+        }
+    }
+
+    @Override
+    public void updatePassword(ChangeUserPasswordDto userDto) {
+        try{
+            User user = this.userRepository.findByEmail(userDto.getEmail()).orElse(null);
+
+            if (user == null) {
+                throw new UserCustomException.UserNotFoundException();
+            }
+
+            if (!passwordEncoder.matches(userDto.getOldPassword(), user.getPassword())){
+                throw new UserCustomException.PasswordMismatchException();
+            }
+
+            user.setPassword(hashPassword(userDto.getNewPassword()));
+            this.userRepository.save(user);
+        } catch (Exception e) {
+            throw e;
+        }
+    }
+
+    @Override
+    public UserDto deleteUser(UUID id) {
+        try{
+            User userForDelete = this.userRepository.findById(id).orElse(null);
+
+            if (userForDelete == null) {
+                throw new UserCustomException.UserNotFoundException();
+            }
+
+            this.userRepository.delete(userForDelete);
+
+            return this.MapUserToDto(userForDelete);
+        } catch (Exception e) {
             throw e;
         }
     }
@@ -182,6 +306,14 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     private UserDto MapUserToDto(User user) {
         try{
             return this.modelMapper.map(user, UserDto.class);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private GoogleUserDto MapUserToGoogleUserDto(User user) {
+        try{
+            return this.modelMapper.map(user, GoogleUserDto.class);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

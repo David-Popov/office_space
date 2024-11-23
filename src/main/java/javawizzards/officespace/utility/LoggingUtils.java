@@ -1,5 +1,7 @@
 package javawizzards.officespace.utility;
 
+import org.springframework.stereotype.Component;
+
 public class LoggingUtils {
 
     public static String logMethodName() {

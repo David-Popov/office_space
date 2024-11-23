@@ -1,4 +1,4 @@
-package javawizzards.officespace.utility;
+package javawizzards.officespace.service.JwtService;
 
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -6,7 +6,7 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import javawizzards.officespace.entity.User;
 import javawizzards.officespace.enumerations.User.RoleEnum;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
@@ -15,8 +15,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-@Component
-public class JwtUtility {
+@Service
+public class JwtServiceImpl implements JwtService {
     @Value("${security.jwt.secret-key}")
     private String SECRET_KEY;
 
@@ -30,6 +30,7 @@ public class JwtUtility {
         return new SecretKeySpec(SECRET_KEY.getBytes(StandardCharsets.UTF_8), SignatureAlgorithm.HS256.getJcaName());
     }
 
+    @Override
     public String generateNormalUserToken(User user) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("email", user.getEmail());
@@ -38,15 +39,10 @@ public class JwtUtility {
         claims.put("roleId", user.getRole().getId());
         claims.put("roleName", user.getRole().getName());
 
-        return Jwts.builder()
-                .setClaims(claims)
-                .setSubject(user.getEmail())
-                .setIssuedAt(new Date())//add Issuer
-                .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
-                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
-                .compact();
+        return generateToken(claims, user.getEmail(), expirationTime);
     }
 
+    @Override
     public String generateGoogleUserToken(User user) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("email", user.getEmail());
@@ -56,29 +52,29 @@ public class JwtUtility {
         claims.put("roleId", user.getRole().getId());
         claims.put("roleName", user.getRole().getName());
 
-        return Jwts.builder()
-                .setClaims(claims)
-                .setSubject(user.getEmail())
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
-                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
-                .compact();
+        return generateToken(claims, user.getEmail(), expirationTime);
     }
 
+    @Override
     public String generateRefreshToken(User user) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("email", user.getEmail());
         claims.put("username", user.getUsername());
 
+        return generateToken(claims, user.getEmail(), refreshTokenExpirationTime);
+    }
+
+    private String generateToken(Map<String, Object> claims, String subject, long expiration) {
         return Jwts.builder()
                 .setClaims(claims)
-                .setSubject(user.getEmail())
+                .setSubject(subject)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + refreshTokenExpirationTime))
+                .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
+    @Override
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder()
@@ -91,49 +87,42 @@ public class JwtUtility {
         }
     }
 
+    @Override
     public String extractEmail(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
-                .build()
-                .parseClaimsJws(token)
-                .getBody()
-                .get("email", String.class);
+        return extractClaim(token, "email", String.class);
     }
 
+    @Override
     public String extractUsername(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
-                .build()
-                .parseClaimsJws(token)
-                .getBody()
-                .get("username", String.class);
+        return extractClaim(token, "username", String.class);
     }
 
+    @Override
     public String extractRole(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
-                .build()
-                .parseClaimsJws(token)
-                .getBody()
-                .get("roleName", String.class);
+        return extractClaim(token, "roleName", String.class);
     }
 
+    @Override
     public boolean checkForAdminRole(String token) {
-        var roleName = Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
-                .build()
-                .parseClaimsJws(token)
-                .getBody()
-                .get("roleName", String.class);
-
+        String roleName = extractRole(token);
         return roleName.equals(RoleEnum.ADMIN.getRoleName());
     }
 
+    @Override
     public Map<String, Object> extractAllClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
+    }
+
+    private <T> T extractClaim(String token, String claimName, Class<T> claimType) {
+        return Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .get(claimName, claimType);
     }
 }
