@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.UUID;
 
 public interface OfficeRoomService {
+    List<OfficeRoomDto> getOfficeRooms();
     OfficeRoomDto createOfficeRoom(OfficeRoomDto officeRoomDto);
     OfficeRoomDto updateOfficeRoom(UUID id, OfficeRoomDto officeRoomDto);
     void deleteOfficeRoom(UUID id);

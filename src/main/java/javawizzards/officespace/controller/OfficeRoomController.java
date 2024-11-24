@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
+import javawizzards.officespace.enumerations.User.UserMessages;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -30,6 +31,22 @@ public class OfficeRoomController {
     public OfficeRoomController(OfficeRoomService officeRoomService, RequestAndResponseService requestAndResponseService) {
         this.officeRoomService = officeRoomService;
         this.requestAndResponseService = requestAndResponseService;
+    }
+
+    @GetMapping("/get-all")
+    public ResponseEntity<Response<?>> getAll() {
+        Response<?> response;
+
+        try{
+            var data = this.officeRoomService.getOfficeRooms();
+            response = new Response<>(data, HttpStatus.OK, UserMessages.USER_UPDATE_SUCCESS.getMessage());
+            this.requestAndResponseService.CreateRequestAndResponse("", response, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response = new Response<>(e.getMessage());
+            this.requestAndResponseService.CreateRequestAndResponse("", response, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
+            return ResponseEntity.internalServerError().body(response);
+        }
     }
 
     @PostMapping("/create")
