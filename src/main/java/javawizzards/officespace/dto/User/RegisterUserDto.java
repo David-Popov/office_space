@@ -30,8 +30,8 @@ public class RegisterUserDto implements Serializable {
     @JsonProperty("password")
     private String password;
 
-    @JsonProperty("pictureUrl")
-    private String pictureUrl;
+//    @JsonProperty("pictureUrl")
+//    private String pictureUrl;
 
     @NotNull(message = "FirstName can't be null")
     @JsonProperty("firstName")
@@ -45,6 +45,6 @@ public class RegisterUserDto implements Serializable {
     @JsonProperty("phone")
     private String phone;
 
-    @JsonProperty("address")
-    private String address;
+//    @JsonProperty("address")
+//    private String address;
 }

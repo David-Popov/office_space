@@ -123,11 +123,11 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             user.setEmail(userDto.getEmail());
             user.setUsername(userDto.getUsername());
             user.setPassword(hashPassword(userDto.getPassword()));
-            user.setPictureUrl(userDto.getPictureUrl());
             user.setFirstName(userDto.getFirstName());
             user.setLastName(userDto.getLastName());
             user.setPhone(userDto.getPhone());
-            user.setAddress(userDto.getAddress());
+//            user.setAddress(userDto.getAddress());
+//            user.setPictureUrl(userDto.getPictureUrl());
 
             Role role = this.roleService.findRoleByName(RoleEnum.USER.getRoleName());
             user.setRole(role);
@@ -249,9 +249,9 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             userForUpdate.setFirstName(userDto.getFirstName());
             userForUpdate.setLastName(userDto.getLastName());
             userForUpdate.setPhone(userDto.getPhone());
-            userForUpdate.setAddress(userDto.getAddress());
-            userForUpdate.setPictureUrl(userDto.getPictureUrl());
             userForUpdate.setUsername(userDto.getUsername());
+//            userForUpdate.setAddress(userDto.getAddress());
+//            userForUpdate.setPictureUrl(userDto.getPictureUrl());
 
             this.userRepository.save(userForUpdate);
 
