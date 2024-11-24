@@ -8,6 +8,8 @@ import lombok.Setter;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 
 @NoArgsConstructor
 @Getter
@@ -15,5 +17,7 @@ import java.time.LocalDateTime;
 public class Request<T> implements Serializable {
     private String requestId;
     private LocalDateTime timestamp;
+
+    @JsonProperty("data")
     private T data;
 }
