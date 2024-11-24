@@ -35,7 +35,6 @@ public class JwtServiceImpl implements JwtService {
         Map<String, Object> claims = new HashMap<>();
         claims.put("email", user.getEmail());
         claims.put("username", user.getUsername());
-        claims.put("pictureUrl", user.getPictureUrl());
         claims.put("roleId", user.getRole().getId());
         claims.put("roleName", user.getRole().getName());
 
@@ -48,7 +47,6 @@ public class JwtServiceImpl implements JwtService {
         claims.put("email", user.getEmail());
         claims.put("username", user.getUsername());
         claims.put("googleId", user.getGoogleId());
-        claims.put("pictureUrl", user.getPictureUrl());
         claims.put("roleId", user.getRole().getId());
         claims.put("roleName", user.getRole().getName());
 
