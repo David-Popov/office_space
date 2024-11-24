@@ -1,6 +1,7 @@
 package javawizzards.officespace.enumerations.User;
 
 public enum UserMessages {
+    INVALID_ID("Invalid ID."),
     USER_NOT_FOUND("User not found."),
     GOOGLE_USER_NOT_FOUND("Google User not found."),
     EMAIL_ALREADY_EXISTS("Email is already registered."),

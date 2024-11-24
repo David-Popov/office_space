@@ -13,11 +13,11 @@ import java.io.Serializable;
 @Setter
 @AllArgsConstructor
 public class LoginResponse implements Serializable  {
+    private UserDto user;
     private String token;
     private String refreshToken;
 
     public LoginResponse() {
-
         this.token = "";
         this.refreshToken = "";
     }

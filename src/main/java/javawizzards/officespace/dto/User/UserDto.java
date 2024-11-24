@@ -28,10 +28,6 @@ public class UserDto implements Serializable {
     @JsonProperty("username")
     private String username;
 
-    @NotNull(message = "Password can't be null")
-    @JsonProperty("password")
-    private String password;
-
     @JsonProperty("pictureUrl")
     private String pictureUrl;
 
@@ -53,4 +49,8 @@ public class UserDto implements Serializable {
     @NotNull
     @JsonProperty("roleId")
     private int roleId;
+
+    @NotNull
+    @JsonProperty("roleName")
+    private String roleName;
 }

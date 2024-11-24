@@ -2,9 +2,12 @@ package javawizzards.officespace.service.User;
 
 import javawizzards.officespace.dto.User.*;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface UserService {
+    UserDto getUser(UUID id);
+    List<UserDto> getUsers();
     UserDto findById(UUID id);
     UserDto findByEmail(String email);
     UserDto findByUsername(String username);

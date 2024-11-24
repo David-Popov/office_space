@@ -31,6 +31,16 @@ public class OfficeRoomServiceImpl implements OfficeRoomService {
     }
 
     @Override
+    public List<OfficeRoomDto> getOfficeRooms() {
+        try{
+            List<OfficeRoom> officeRooms = officeRoomRepository.findAll();
+            return this.modelMapper.map(officeRooms, List.class);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
     public OfficeRoomDto createOfficeRoom(OfficeRoomDto officeRoomDto) {
         try {
             Company company = companyRepository.findById(officeRoomDto.getCompanyId())
