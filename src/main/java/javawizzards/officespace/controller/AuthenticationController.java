@@ -7,6 +7,7 @@ import javawizzards.officespace.dto.Response.Response;
 import javawizzards.officespace.dto.User.*;
 import javawizzards.officespace.entity.RequestAndResponse;
 import javawizzards.officespace.enumerations.User.UserMessages;
+import javawizzards.officespace.service.Email.EmailService;
 import javawizzards.officespace.service.RequestAndResponse.RequestAndResponseService;
 import javawizzards.officespace.service.User.UserService;
 import javawizzards.officespace.utility.LoggingUtils;
@@ -23,10 +24,12 @@ public class AuthenticationController {
 
     private final UserService userService;
     private final RequestAndResponseService requestAndResponseService;
+    private final EmailService emailService;
 
-    public AuthenticationController(UserService userService, RequestAndResponseService requestAndResponseService) {
+    public AuthenticationController(UserService userService, RequestAndResponseService requestAndResponseService, EmailService emailService) {
         this.userService = userService;
         this.requestAndResponseService = requestAndResponseService;
+        this.emailService = emailService;
     }
 
     @PostMapping("/register")
@@ -51,6 +54,7 @@ public class AuthenticationController {
 
             this.requestAndResponseService.CreateRequestAndResponse(request, response, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
 
+            this.emailService.sendRegistrationEmail(registeredUser.getEmail(),registeredUser.getUsername(), "http://localhost:5173/login");
             return ResponseEntity.ok(response);
 
         } catch (Exception e) {

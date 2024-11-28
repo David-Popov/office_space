@@ -39,7 +39,7 @@ public class RequestAndResponse {
     @NotEmpty(message = "Request ID cannot be empty")
     private String requestId;
 
-    @Column(nullable = false, length = 500)
+    @Column(nullable = false, length = 2500)
     @NotEmpty(message = "Request data cannot be empty")
     private String requestData;
 
@@ -47,7 +47,7 @@ public class RequestAndResponse {
     @NotEmpty(message = "Response ID cannot be empty")
     private String responseId;
 
-    @Column(nullable = true, length = 500)
+    @Column(nullable = true, length = 2500)
     private String responseData;
 
     @Column(nullable = true)

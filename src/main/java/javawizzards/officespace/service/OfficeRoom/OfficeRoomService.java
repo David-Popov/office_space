@@ -19,4 +19,6 @@ public interface OfficeRoomService {
     List<OfficeRoomDto> findOfficeRoomsByType(String type);
     List<OfficeRoomDto> filterOfficeRooms(String name, String building, String floor, String type, Integer capacity);
     List<OfficeRoomDto> findAvailableRooms(LocalDateTime startDateTime, LocalDateTime endDateTime);
+    List<String> getOfficeRoomStatusList();
+    List<String> getOfficeRoomTypeList();
 }

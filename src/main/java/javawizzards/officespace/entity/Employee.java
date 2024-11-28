@@ -2,6 +2,7 @@ package javawizzards.officespace.entity;
 
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -35,9 +36,11 @@ public class Employee {
 
     @ManyToOne
     @JoinColumn(nullable = false, name = "company_uuid")
+    @JsonBackReference
     private Company company;
 
     @ManyToOne
     @JoinColumn(nullable = false, name = "department_uuid")
+    @JsonBackReference
     private Department department;
 }

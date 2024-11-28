@@ -199,4 +199,10 @@ public class ReservationController {
             return ResponseEntity.internalServerError().body(errorResponse);
         }
     }
+
+    @GetMapping("/get-statuses")
+    public ResponseEntity<List<String>> getOfficeRoomStatuses() {
+        List<String> officeStatuses = this.reservationService.getReservationStatusList();
+        return ResponseEntity.ok(officeStatuses);
+    }
 }

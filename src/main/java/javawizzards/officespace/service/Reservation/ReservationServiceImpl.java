@@ -4,6 +4,8 @@ import javawizzards.officespace.dto.Reservation.ReservationDto;
 import javawizzards.officespace.entity.OfficeRoom;
 import javawizzards.officespace.entity.Reservation;
 import javawizzards.officespace.entity.User;
+import javawizzards.officespace.enumerations.OfficeRoom.RoomType;
+import javawizzards.officespace.enumerations.Reservation.ReservationStatus;
 import javawizzards.officespace.exception.Reservation.ReservationCustomException;
 import javawizzards.officespace.repository.OfficeRoomRepository;
 import javawizzards.officespace.repository.ReservationRepository;
@@ -14,6 +16,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class ReservationServiceImpl implements ReservationService {
@@ -47,6 +50,7 @@ public class ReservationServiceImpl implements ReservationService {
             reservation.setStatus(reservationDto.getStatus());
             reservation.setUserId(reservationDto.getUserId());
             reservation.setOfficeRoom(officeRoom);
+            reservation.setDurationAsHours((reservationDto.getDurationAsHours()));
 
             List<User> participants = reservationDto.getParticipantIds().stream()
                     .map(userId -> userRepository.findById(userId)
@@ -90,6 +94,7 @@ public class ReservationServiceImpl implements ReservationService {
             existingReservation.setUserId(reservationDto.getUserId());
             existingReservation.setStartDateTime(reservationDto.getStartDateTime());
             existingReservation.setEndDateTime(reservationDto.getEndDateTime());
+            existingReservation.setDurationAsHours(reservationDto.getDurationAsHours());
             existingReservation.setStatus(reservationDto.getStatus());
 
             if (existingReservation.getOfficeRoom().getId() != reservationDto.getOfficeRoomId()) {
@@ -140,6 +145,15 @@ public class ReservationServiceImpl implements ReservationService {
         } catch (Exception e) {
             throw new RuntimeException("Error finding reservations by user Id", e);
         }
+    }
+
+    @Override
+    public List<String> getReservationStatusList() {
+        List<String> statusList = Stream.of(ReservationStatus.values())
+                .map(Enum::name)
+                .collect(Collectors.toList());
+
+        return statusList;
     }
 
     private ReservationDto mapToDto(Reservation reservation) {
