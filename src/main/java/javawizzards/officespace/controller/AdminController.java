@@ -102,7 +102,7 @@ public class AdminController {
         }
     }
 
-    @GetMapping()
+    @GetMapping("get-users")
     public ResponseEntity<Response<?>> getAllUsers() {
         Response<?> response;
         String requestId = UUID.randomUUID().toString();
