@@ -1,5 +1,6 @@
 package javawizzards.officespace.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -27,8 +28,10 @@ public class Department {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, name = "company_uuid")
+    @JsonBackReference
     private Company company;
 
     @OneToMany(mappedBy = "department", cascade = CascadeType.ALL)
+    @JsonBackReference
     private List<Employee> employees = new ArrayList<>();
 }

@@ -1,6 +1,8 @@
 package javawizzards.officespace.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import javawizzards.officespace.enumerations.Reservation.ReservationStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -34,7 +36,13 @@ public class Reservation {
     @Column(name = "end_date_time", nullable = false)
     private LocalDateTime endDateTime;
 
-    private String status;
+    @Column(name = "duration", nullable = false)
+    private int durationAsHours;
+
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ReservationStatus status;
 
     @ManyToOne
     @JoinColumn(name = "office_room_uuid", nullable = false)

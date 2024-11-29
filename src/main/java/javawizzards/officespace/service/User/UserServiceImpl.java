@@ -1,5 +1,6 @@
 package javawizzards.officespace.service.User;
 
+import javawizzards.officespace.dto.OfficeRoom.OfficeRoomDto;
 import javawizzards.officespace.dto.User.*;
 import javawizzards.officespace.entity.Role;
 import javawizzards.officespace.entity.User;
@@ -20,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @Service
 public class UserServiceImpl implements UserService, UserDetailsService {
@@ -65,13 +67,9 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         try{
             List<User> users = this.userRepository.findAll();
 
-            List<UserDto> userDtos = this.modelMapper.map(users, List.class);
-
-            userDtos.stream()
-                    .peek(user -> user.setRoleName(this.roleService.findRoleById(user.getRoleId()).getName()))
-                    .toList();
-
-            return userDtos;
+            return users.stream()
+                    .map(user -> modelMapper.map(user, UserDto.class))
+                    .collect(Collectors.toList());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

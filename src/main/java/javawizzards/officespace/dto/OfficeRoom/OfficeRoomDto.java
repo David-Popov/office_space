@@ -1,5 +1,7 @@
 package javawizzards.officespace.dto.OfficeRoom;
 
+import javawizzards.officespace.entity.OfficeRoom;
+import javawizzards.officespace.enumerations.OfficeRoom.RoomType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -8,6 +10,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.validation.constraints.NotNull;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @NoArgsConstructor
@@ -29,19 +32,22 @@ public class OfficeRoomDto{
     @JsonProperty("floor")
     private String floor;
 
-    @JsonProperty("type")
-    private String type;
+    @NotNull(message = "Room type is required")
+    private RoomType type;
 
     @NotNull(message = "OfficeRoom capacity can't be null")
     @JsonProperty("capacity")
     private Integer capacity;
 
-    @NotNull(message = "OfficeRoom status can't be null")
-    @JsonProperty("status")
-    private String status;
+//    @NotNull(message = "OfficeRoom status can't be null")
+//    @JsonProperty("status")
+//    private String status;
 
     @JsonProperty("pictureUrl")
     private String pictureUrl;
+
+    @JsonProperty("pricePerHour")
+    private BigDecimal pricePerHour;
 
     @NotNull(message = "OfficeRoom company name can't be null")
     @JsonProperty("company_uuid")

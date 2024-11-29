@@ -23,7 +23,7 @@ import javawizzards.officespace.utility.LoggingUtils;
 
 
 @RestController
-@RequestMapping("/officerooms")
+@RequestMapping("/office-rooms")
 public class OfficeRoomController {
     private final OfficeRoomService officeRoomService;
     private final RequestAndResponseService requestAndResponseService;
@@ -33,18 +33,20 @@ public class OfficeRoomController {
         this.requestAndResponseService = requestAndResponseService;
     }
 
-    @GetMapping("/get-all")
+    @GetMapping
+    @ResponseBody
     public ResponseEntity<Response<?>> getAll() {
         Response<?> response;
+        String requestId = UUID.randomUUID().toString();
 
         try{
             var data = this.officeRoomService.getOfficeRooms();
             response = new Response<>(data, HttpStatus.OK, UserMessages.USER_UPDATE_SUCCESS.getMessage());
-            this.requestAndResponseService.CreateRequestAndResponse("", response, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
+            //this.requestAndResponseService.CreateRequestAndResponse(requestId, response, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             response = new Response<>(e.getMessage());
-            this.requestAndResponseService.CreateRequestAndResponse("", response, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
+            //this.requestAndResponseService.CreateRequestAndResponse(requestId, response, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
             return ResponseEntity.internalServerError().body(response);
         }
     }
@@ -183,4 +185,15 @@ public class OfficeRoomController {
         }
     }
 
+    @GetMapping("/get-statuses")
+    public ResponseEntity<List<String>> getOfficeRoomStatuses() {
+            List<String> officeStatuses = this.officeRoomService.getOfficeRoomStatusList();
+            return ResponseEntity.ok(officeStatuses);
+    }
+
+    @GetMapping("/get-types")
+    public ResponseEntity<List<String>> getOfficeRoomTypes() {
+        List<String> officeTypes = this.officeRoomService.getOfficeRoomTypeList();
+        return ResponseEntity.ok(officeTypes);
+    }
 }

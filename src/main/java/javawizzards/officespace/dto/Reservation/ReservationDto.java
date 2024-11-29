@@ -1,5 +1,6 @@
 package javawizzards.officespace.dto.Reservation;
 
+import javawizzards.officespace.enumerations.Reservation.ReservationStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -33,9 +34,13 @@ public class ReservationDto {
     @JsonProperty("end_date_time")
     private LocalDateTime endDateTime;
 
+    @NotNull(message = "Duration can't be null")
+    @JsonProperty("durationAsHours")
+    private int durationAsHours;
+
     @NotNull(message = "Reservation status can't be null")
     @JsonProperty("status")
-    private String status;
+    private ReservationStatus status;
 
     @NotNull(message = "Reservation officeRoomId can't be null")
     @JsonProperty("office_room_uuid")

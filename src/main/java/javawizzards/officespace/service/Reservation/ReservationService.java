@@ -11,4 +11,5 @@ public interface ReservationService {
     ReservationDto findReservationById(UUID reservationId);
     List<ReservationDto> findReservationsByOfficeRoomId(UUID officeRoomId);
     List<ReservationDto> findReservationsByUserId(UUID userId);
+    List<String> getReservationStatusList();
 }

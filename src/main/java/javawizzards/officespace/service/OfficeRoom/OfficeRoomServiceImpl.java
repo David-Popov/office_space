@@ -3,6 +3,8 @@ package javawizzards.officespace.service.OfficeRoom;
 import javawizzards.officespace.dto.OfficeRoom.OfficeRoomDto;
 import javawizzards.officespace.entity.Company;
 import javawizzards.officespace.entity.OfficeRoom;
+import javawizzards.officespace.enumerations.OfficeRoom.RoomStatus;
+import javawizzards.officespace.enumerations.OfficeRoom.RoomType;
 import javawizzards.officespace.exception.OfficeRoom.OfficeRoomCustomException;
 import javawizzards.officespace.repository.CompanyRepository;
 import javawizzards.officespace.repository.OfficeRoomRepository;
@@ -10,10 +12,13 @@ import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class OfficeRoomServiceImpl implements OfficeRoomService {
@@ -34,7 +39,9 @@ public class OfficeRoomServiceImpl implements OfficeRoomService {
     public List<OfficeRoomDto> getOfficeRooms() {
         try{
             List<OfficeRoom> officeRooms = officeRoomRepository.findAll();
-            return this.modelMapper.map(officeRooms, List.class);
+            return officeRooms.stream()
+                    .map(officeRoom -> modelMapper.map(officeRoom, OfficeRoomDto.class))
+                    .collect(Collectors.toList());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -53,8 +60,9 @@ public class OfficeRoomServiceImpl implements OfficeRoomService {
             officeRoom.setFloor(officeRoomDto.getFloor());
             officeRoom.setType(officeRoomDto.getType());
             officeRoom.setCapacity(officeRoomDto.getCapacity());
-            officeRoom.setStatus(officeRoomDto.getStatus());
+            officeRoom.setStatus(RoomStatus.OCCUPIED);
             officeRoom.setPictureUrl(officeRoomDto.getPictureUrl());
+            officeRoom.setPricePerHour(officeRoomDto.getPricePerHour());
             officeRoom.setCompany(company);
 
             OfficeRoom savedOfficeRoom = officeRoomRepository.save(officeRoom);
@@ -80,8 +88,9 @@ public class OfficeRoomServiceImpl implements OfficeRoomService {
             existingOfficeRoom.setFloor(officeRoomDto.getFloor());
             existingOfficeRoom.setType(officeRoomDto.getType());
             existingOfficeRoom.setCapacity(officeRoomDto.getCapacity());
-            existingOfficeRoom.setStatus(officeRoomDto.getStatus());
+//            existingOfficeRoom.setStatus(officeRoomDto.getStatus());
             existingOfficeRoom.setPictureUrl(officeRoomDto.getPictureUrl());
+            existingOfficeRoom.setPricePerHour(officeRoomDto.getPricePerHour());
             existingOfficeRoom.setCompany(company);
 
             OfficeRoom updatedOfficeRoom = officeRoomRepository.save(existingOfficeRoom);
@@ -199,6 +208,24 @@ public List<OfficeRoomDto> findAvailableRooms(LocalDateTime startDateTime, Local
         throw e;
     }
 }
+
+    @Override
+    public List<String> getOfficeRoomStatusList() {
+        List<String> statusList = Stream.of(RoomStatus.values())
+                .map(Enum::name)
+                .collect(Collectors.toList());
+
+        return statusList;
+    }
+
+    @Override
+    public List<String> getOfficeRoomTypeList() {
+        List<String> statusList = Stream.of(RoomType.values())
+                .map(Enum::name)
+                .collect(Collectors.toList());
+
+        return statusList;
+    }
 
     private OfficeRoomDto mapToDto(OfficeRoom officeRoom) {
         try {
