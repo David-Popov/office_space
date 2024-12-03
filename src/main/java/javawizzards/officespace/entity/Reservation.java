@@ -55,4 +55,19 @@ public class Reservation {
         inverseJoinColumns = @JoinColumn(name = "user_uuid")
     )
     private List<User> participants = new ArrayList<>();
+
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "event_id", unique = true)
+    private Event event;
+
+    public void setEvent(Event event) {
+        if (event == null) {
+            if (this.event != null) {
+                this.event.setReservation(null);
+            }
+        } else {
+            event.setReservation(this);
+        }
+        this.event = event;
+    }
 }

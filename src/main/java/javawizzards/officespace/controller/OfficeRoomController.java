@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
+import jakarta.validation.Valid;
+import javawizzards.officespace.dto.Resource.ResourceDto;
 import javawizzards.officespace.enumerations.User.UserMessages;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -183,6 +185,27 @@ public class OfficeRoomController {
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body(new Response<>(e.getMessage()));
         }
+    }
+
+    @PostMapping("/{officeRoomId}/resources")
+    public ResponseEntity<OfficeRoomDto> addResource(
+            @PathVariable UUID officeRoomId,
+            @RequestBody @Valid ResourceDto resourceDto) {
+        return ResponseEntity.ok(officeRoomService.addResourceToRoom(officeRoomId, resourceDto));
+    }
+
+    @PostMapping("/{officeRoomId}/resources/batch")
+    public ResponseEntity<OfficeRoomDto> addResources(
+            @PathVariable UUID officeRoomId,
+            @RequestBody @Valid List<ResourceDto> resourceDtos) {
+        return ResponseEntity.ok(officeRoomService.addResourcesToRoom(officeRoomId, resourceDtos));
+    }
+
+    @DeleteMapping("/{officeRoomId}/resources/{resourceId}")
+    public ResponseEntity<OfficeRoomDto> removeResource(
+            @PathVariable UUID officeRoomId,
+            @PathVariable UUID resourceId) {
+        return ResponseEntity.ok(officeRoomService.removeResourceFromRoom(officeRoomId, resourceId));
     }
 
     @GetMapping("/get-statuses")

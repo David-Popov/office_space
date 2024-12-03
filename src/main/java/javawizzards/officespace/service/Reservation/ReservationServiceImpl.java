@@ -1,11 +1,14 @@
 package javawizzards.officespace.service.Reservation;
 
+import javawizzards.officespace.dto.Reservation.CreateReservationDto;
 import javawizzards.officespace.dto.Reservation.ReservationDto;
+import javawizzards.officespace.entity.Event;
 import javawizzards.officespace.entity.OfficeRoom;
 import javawizzards.officespace.entity.Reservation;
 import javawizzards.officespace.entity.User;
 import javawizzards.officespace.enumerations.OfficeRoom.RoomType;
 import javawizzards.officespace.enumerations.Reservation.ReservationStatus;
+import javawizzards.officespace.enumerations.User.UserMessages;
 import javawizzards.officespace.exception.Reservation.ReservationCustomException;
 import javawizzards.officespace.repository.OfficeRoomRepository;
 import javawizzards.officespace.repository.ReservationRepository;
@@ -37,7 +40,7 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
-    public ReservationDto createReservation(ReservationDto reservationDto) {
+    public ReservationDto createReservation(CreateReservationDto reservationDto) {
         try {
             OfficeRoom officeRoom = officeRoomRepository.findById(reservationDto.getOfficeRoomId())
                     .orElseThrow(ReservationCustomException.ReservationNotFoundException::new);
@@ -47,8 +50,7 @@ public class ReservationServiceImpl implements ReservationService {
             reservation.setUserId(reservationDto.getUserId());
             reservation.setStartDateTime(reservationDto.getStartDateTime());
             reservation.setEndDateTime(reservationDto.getEndDateTime());
-            reservation.setStatus(reservationDto.getStatus());
-            reservation.setUserId(reservationDto.getUserId());
+            reservation.setStatus(ReservationStatus.CONFIRMED);
             reservation.setOfficeRoom(officeRoom);
             reservation.setDurationAsHours((reservationDto.getDurationAsHours()));
 
@@ -57,6 +59,16 @@ public class ReservationServiceImpl implements ReservationService {
                     .orElseThrow(ReservationCustomException.ReservationNotFoundException::new))
                     .collect(Collectors.toList());
             reservation.setParticipants(participants);
+
+            if (reservationDto.getEvent() != null) {
+                Event event = new Event();
+                event.setMeetingTitle(reservationDto.getEvent().getMeetingTitle());
+                event.setDescription(reservationDto.getEvent().getDescription());
+                event.setAttendees(reservationDto.getEvent().getAttendees());
+                event.setContactEmail(reservationDto.getEvent().getContactEmail());
+                event.setDepartment(reservationDto.getEvent().getDepartment());
+                reservation.setEvent(event);
+            }
 
             Reservation savedReservation = reservationRepository.save(reservation);
             return mapToDto(savedReservation);
@@ -103,11 +115,24 @@ public class ReservationServiceImpl implements ReservationService {
                 existingReservation.setOfficeRoom(officeRoom);
             }
 
-            List<User> updatedParticipants = reservationDto.getParticipantIds().stream()
-                    .map(userId -> userRepository.findById(userId)
-                    .orElseThrow(ReservationCustomException.ReservationNotFoundException::new))
+            List<User> updatedParticipants = reservationDto.getParticipants().stream()
+                    .map(user -> userRepository.findById(user.getId())
+                            .orElseThrow(ReservationCustomException.ReservationNotFoundException::new))
                     .collect(Collectors.toList());
             existingReservation.setParticipants(updatedParticipants);
+
+            if (reservationDto.getEvent() != null) {
+                Event event = existingReservation.getEvent();
+                if (event == null) {
+                    event = new Event();
+                }
+                event.setMeetingTitle(reservationDto.getEvent().getMeetingTitle());
+                event.setDescription(reservationDto.getEvent().getDescription());
+                event.setAttendees(reservationDto.getEvent().getAttendees());
+                event.setContactEmail(reservationDto.getEvent().getContactEmail());
+                event.setDepartment(reservationDto.getEvent().getDepartment());
+                existingReservation.setEvent(event);
+            }
 
             Reservation updatedReservation = reservationRepository.save(existingReservation);
             return mapToDto(updatedReservation);
