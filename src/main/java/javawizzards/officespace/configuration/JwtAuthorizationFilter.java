@@ -38,29 +38,37 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
         final String authorizationHeader = request.getHeader("Authorization");
 
-        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-            String jwt = authorizationHeader.substring(7);
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            chain.doFilter(request, response);
+            return;
+        }
 
-            if (!jwtUtility.validateToken(jwt)) {
-                chain.doFilter(request, response);
+        String jwt = authorizationHeader.substring(7);
+
+        try {
+            if (jwtUtility.validateToken(jwt)) {
+                String email = jwtUtility.extractEmail(jwt);
+                String roleName = jwtUtility.extractRole(jwt);
+
+                if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+
+                    GrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + roleName);
+                    List<GrantedAuthority> combinedAuthorities = new ArrayList<>(userDetails.getAuthorities());
+                    combinedAuthorities.add(authority);
+
+                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                            userDetails, null, combinedAuthorities);
+                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                }
+            } else {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 return;
             }
-
-            String email = jwtUtility.extractEmail(jwt);
-            String roleName = jwtUtility.extractRole(jwt);
-
-            if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                UserDetails userDetails = userDetailsService.loadUserByUsername(email);
-
-                GrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + roleName);
-                List<GrantedAuthority> combinedAuthorities = new ArrayList<>(userDetails.getAuthorities());
-                combinedAuthorities.add(authority);
-
-                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, combinedAuthorities);
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-            }
+        } catch (Exception e) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
         }
 
         chain.doFilter(request, response);

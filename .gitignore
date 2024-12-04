@@ -33,3 +33,6 @@ build/
 .vscode/
 
 .env
+/logs
+src/main/resources/credentials.json
+tokens/

@@ -1,5 +1,6 @@
 package javawizzards.officespace.service.User;
 
+import javawizzards.officespace.dto.OfficeRoom.OfficeRoomDto;
 import javawizzards.officespace.dto.User.*;
 import javawizzards.officespace.entity.Role;
 import javawizzards.officespace.entity.User;
@@ -17,8 +18,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @Service
 public class UserServiceImpl implements UserService, UserDetailsService {
@@ -39,6 +42,37 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         this.jwtUtility = jwtUtility;
         this.jwtService = jwtService;
         this.logger = Logger.getLogger(this.getClass().getName());
+    }
+
+    @Override
+    public UserDto getUser(UUID id) {
+        try{
+            User user = this.userRepository.findById(id).orElse(null);
+
+            if (user == null) {
+                throw new UsernameNotFoundException("User not found");
+            }
+
+            UserDto userDto = this.modelMapper.map(user, UserDto.class);
+//            userDto.setRoleName(this.setUserDtoRoleName(userDto));
+            this.setUserDtoRoleName(userDto);
+            return userDto;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public List<UserDto> getUsers() {
+        try{
+            List<User> users = this.userRepository.findAll();
+
+            return users.stream()
+                    .map(user -> modelMapper.map(user, UserDto.class))
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -87,11 +121,11 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             user.setEmail(userDto.getEmail());
             user.setUsername(userDto.getUsername());
             user.setPassword(hashPassword(userDto.getPassword()));
-            user.setPictureUrl(userDto.getPictureUrl());
             user.setFirstName(userDto.getFirstName());
             user.setLastName(userDto.getLastName());
             user.setPhone(userDto.getPhone());
-            user.setAddress(userDto.getAddress());
+//            user.setAddress(userDto.getAddress());
+//            user.setPictureUrl(userDto.getPictureUrl());
 
             Role role = this.roleService.findRoleByName(RoleEnum.USER.getRoleName());
             user.setRole(role);
@@ -129,28 +163,27 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     }
 
     @Override
-    public LoginResponse loginUser(LoginUserDto userDto) {
+    public LoginResponse loginUser(LoginUserDto loginUserDto) {
         try{
-            User user = this.userRepository.findByEmail(userDto.getEmail()).orElse(null);
+            User user = this.userRepository.findByEmail(loginUserDto.getEmail()).orElse(null);
 
             if (user == null) {
                 throw new UserCustomException.UserNotFoundException();
             }
 
-            if (!passwordEncoder.matches(userDto.getPassword(), user.getPassword())) {
+            if (!passwordEncoder.matches(loginUserDto.getPassword(), user.getPassword())) {
                 throw new UserCustomException.PasswordMismatchException();
             }
 
-//            String token = this.jwtUtility.generateNormalUserToken(user);
-//            String refreshToken = this.jwtUtility.generateRefreshToken(user);
-
             String token = this.jwtService.generateNormalUserToken(user);
             String refreshToken = this.jwtService.generateRefreshToken(user);
+            UserDto userDto = this.MapUserToDto(user);
+            this.setUserDtoRoleName(userDto);
 
             user.setRefreshToken(refreshToken);
             this.userRepository.save(user);
 
-            LoginResponse response = new LoginResponse(token, refreshToken);
+            LoginResponse response = new LoginResponse(userDto, token, refreshToken);
 
             return response;
         }
@@ -169,16 +202,15 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             }
 
             if (refreshToken.equals(user.getRefreshToken())) {
-//                String newToken = this.jwtUtility.generateNormalUserToken(user);
-//                String newRefreshToken = this.jwtUtility.generateRefreshToken(user);
-
                 String newToken = this.jwtService.generateNormalUserToken(user);
                 String newRefreshToken = this.jwtService.generateRefreshToken(user);
+                UserDto userDto = this.MapUserToDto(user);
+                this.setUserDtoRoleName(userDto);
 
                 user.setRefreshToken(refreshToken);
                 this.userRepository.save(user);
 
-                return new LoginResponse(newToken, newRefreshToken);
+                return new LoginResponse(userDto, newToken, newRefreshToken);
             }
 
             return new LoginResponse();
@@ -215,9 +247,9 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             userForUpdate.setFirstName(userDto.getFirstName());
             userForUpdate.setLastName(userDto.getLastName());
             userForUpdate.setPhone(userDto.getPhone());
-            userForUpdate.setAddress(userDto.getAddress());
-            userForUpdate.setPictureUrl(userDto.getPictureUrl());
             userForUpdate.setUsername(userDto.getUsername());
+//            userForUpdate.setAddress(userDto.getAddress());
+//            userForUpdate.setPictureUrl(userDto.getPictureUrl());
 
             this.userRepository.save(userForUpdate);
 
@@ -262,6 +294,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             }
 
             user.setPassword(hashPassword(userDto.getNewPassword()));
+            this.userRepository.save(user);
         } catch (Exception e) {
             throw e;
         }
@@ -324,5 +357,10 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private void setUserDtoRoleName(UserDto user){
+        String roleName = this.roleService.findRoleById(user.getRoleId()).getName();
+        user.setRoleName(roleName);
     }
 }
