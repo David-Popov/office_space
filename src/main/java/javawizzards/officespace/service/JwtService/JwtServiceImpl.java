@@ -33,6 +33,7 @@ public class JwtServiceImpl implements JwtService {
     @Override
     public String generateNormalUserToken(User user) {
         Map<String, Object> claims = new HashMap<>();
+        claims.put("id", user.getId());
         claims.put("email", user.getEmail());
         claims.put("username", user.getUsername());
         claims.put("roleId", user.getRole().getId());

@@ -42,7 +42,7 @@ public class SecurityConfig {
                                 "/auth/register",
                                 "/auth/login",
                                 "/notification/**",
-                                "/office-rooms",
+                                "/office-rooms/**",
                                 "/oauth2/**").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
