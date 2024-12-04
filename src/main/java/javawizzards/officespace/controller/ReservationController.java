@@ -1,6 +1,7 @@
 package javawizzards.officespace.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import javawizzards.officespace.dto.Reservation.CreateReservationDto;
 import javawizzards.officespace.dto.Response.Response;
 import javawizzards.officespace.enumerations.Reservation.ReservationMessages;
 import javawizzards.officespace.dto.Request.Request;
@@ -31,7 +32,7 @@ public class ReservationController {
 
     @PostMapping("/create")
     public ResponseEntity<Response<String>> createReservation(
-        @RequestBody Request<ReservationDto> request, 
+        @RequestBody Request<CreateReservationDto> request,
         BindingResult bindingResult) throws JsonProcessingException {
         // 1) Валидиране на заявката 
         //->проверява се за грешки в данните, подадени в заявката

@@ -126,7 +126,7 @@ public class DatabaseInitializer implements CommandLineRunner {
             officeRoom = officeRoomRepository.save(officeRoom);
 
             Reservation reservation = new Reservation();
-            reservation.setUserId(user.getId());
+//            reservation.setUserId(user.getId());
             reservation.setReservationTitle("Team Meeting");
             reservation.setStartDateTime(LocalDateTime.now().plusDays(1));
             reservation.setEndDateTime(LocalDateTime.now().plusDays(1).plusHours(2));

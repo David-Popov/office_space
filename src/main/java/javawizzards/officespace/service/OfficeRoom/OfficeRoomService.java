@@ -1,6 +1,7 @@
 package javawizzards.officespace.service.OfficeRoom;
 
 import javawizzards.officespace.dto.OfficeRoom.OfficeRoomDto;
+import javawizzards.officespace.dto.Resource.ResourceDto;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -21,4 +22,7 @@ public interface OfficeRoomService {
     List<OfficeRoomDto> findAvailableRooms(LocalDateTime startDateTime, LocalDateTime endDateTime);
     List<String> getOfficeRoomStatusList();
     List<String> getOfficeRoomTypeList();
+    OfficeRoomDto addResourceToRoom(UUID officeRoomId, ResourceDto resourceDto);
+    OfficeRoomDto addResourcesToRoom(UUID officeRoomId, List<ResourceDto> resourceDtos);
+    OfficeRoomDto removeResourceFromRoom(UUID officeRoomId, UUID resourceId);
 }

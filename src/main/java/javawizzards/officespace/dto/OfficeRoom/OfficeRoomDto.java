@@ -1,6 +1,11 @@
 package javawizzards.officespace.dto.OfficeRoom;
 
+import jakarta.validation.constraints.PositiveOrZero;
+import javawizzards.officespace.dto.Company.CompanyDto;
+import javawizzards.officespace.dto.Reservation.ReservationDto;
+import javawizzards.officespace.dto.Resource.ResourceDto;
 import javawizzards.officespace.entity.OfficeRoom;
+import javawizzards.officespace.enumerations.OfficeRoom.RoomStatus;
 import javawizzards.officespace.enumerations.OfficeRoom.RoomType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -11,6 +16,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 @NoArgsConstructor
@@ -18,6 +24,9 @@ import java.util.UUID;
 @Getter
 @Setter
 public class OfficeRoomDto{
+    @JsonProperty("id")
+    private UUID id;
+
     @NotNull(message = "OfficeRoom name can't be null")
     @JsonProperty("office_room_name")
     private String officeRoomName;
@@ -33,24 +42,32 @@ public class OfficeRoomDto{
     private String floor;
 
     @NotNull(message = "Room type is required")
+    @JsonProperty("type")
     private RoomType type;
 
     @NotNull(message = "OfficeRoom capacity can't be null")
     @JsonProperty("capacity")
     private Integer capacity;
 
-//    @NotNull(message = "OfficeRoom status can't be null")
-//    @JsonProperty("status")
-//    private String status;
+    @NotNull(message = "OfficeRoom status can't be null")
+    @JsonProperty("status")
+    private RoomStatus status;
 
-    @JsonProperty("pictureUrl")
+    @JsonProperty("picture_url")
     private String pictureUrl;
 
-    @JsonProperty("pricePerHour")
+    @NotNull
+    @PositiveOrZero
+    @JsonProperty("price_per_hour")
     private BigDecimal pricePerHour;
 
-    @NotNull(message = "OfficeRoom company name can't be null")
-    @JsonProperty("company_uuid")
-    private UUID companyId;
+    @NotNull(message = "Company information can't be null")
+    @JsonProperty("company")
+    private CompanyDto company;
 
+    @JsonProperty("reservations")
+    private List<ReservationDto> reservations;
+
+    @JsonProperty("resources")
+    private List<ResourceDto> resources;
 }
