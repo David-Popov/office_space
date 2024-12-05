@@ -50,7 +50,7 @@ public class ReservationServiceImpl implements ReservationService {
             reservation.setUserId(reservationDto.getUserId());
             reservation.setStartDateTime(reservationDto.getStartDateTime());
             reservation.setEndDateTime(reservationDto.getEndDateTime());
-            reservation.setStatus(ReservationStatus.CONFIRMED);
+            reservation.setStatus(ReservationStatus.PENDING);
             reservation.setOfficeRoom(officeRoom);
             reservation.setDurationAsHours((reservationDto.getDurationAsHours()));
 
