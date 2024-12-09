@@ -3,12 +3,14 @@ package javawizzards.officespace.dto.User;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
+import javawizzards.officespace.dto.Reservation.ReservationDto;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.io.Serializable;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -53,4 +55,8 @@ public class UserDto implements Serializable {
     @NotNull
     @JsonProperty("roleName")
     private String roleName;
+
+    @NotNull
+    @JsonProperty("reservations")
+    private List<ReservationDto> reservations;
 }

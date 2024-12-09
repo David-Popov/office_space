@@ -1,8 +1,11 @@
 package javawizzards.officespace.service.JwtService;
 
+import com.nimbusds.jose.shaded.gson.Gson;
+import com.nimbusds.jose.shaded.gson.GsonBuilder;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import javawizzards.officespace.configuration.JsonAdapter;
 import javawizzards.officespace.entity.User;
 import javawizzards.officespace.enumerations.User.RoleEnum;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,9 +14,12 @@ import org.springframework.stereotype.Service;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class JwtServiceImpl implements JwtService {
@@ -36,8 +42,17 @@ public class JwtServiceImpl implements JwtService {
         claims.put("id", user.getId());
         claims.put("email", user.getEmail());
         claims.put("username", user.getUsername());
+        claims.put("phone", user.getPhone());
+        claims.put("firstName", user.getFirstName());
+        claims.put("lastName", user.getLastName());
         claims.put("roleId", user.getRole().getId());
         claims.put("roleName", user.getRole().getName());
+
+        List<String> reservationIds = user.getReservations()
+                .stream()
+                .map(reservation -> reservation.getId().toString())
+                .collect(Collectors.toList());
+        claims.put("reservations", reservationIds);
 
         return generateToken(claims, user.getEmail(), expirationTime);
     }
