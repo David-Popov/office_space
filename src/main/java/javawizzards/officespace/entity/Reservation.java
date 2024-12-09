@@ -25,8 +25,9 @@ public class Reservation {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(nullable = false)
-    private UUID userId;
+    @ManyToOne
+    @JoinColumn(name = "user_uuid", nullable = false)
+    private User user;
 
     private String reservationTitle;
 
