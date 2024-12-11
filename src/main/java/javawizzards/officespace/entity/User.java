@@ -61,6 +61,12 @@ public class User implements UserDetails {
     @Column(nullable = true)
     private String googleId;
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Reservation> reservations;
+
+    @OneToMany(mappedBy = "user")
+    private List<Payment> payments;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of();

@@ -27,7 +27,7 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
     private final UserDetailsService userDetailsService;
 
-    public JwtAuthorizationFilter(JwtUtility jwtUtility,@Lazy UserDetailsService userDetailsService) {
+    public JwtAuthorizationFilter(JwtUtility jwtUtility, @Lazy UserDetailsService userDetailsService) {
         this.jwtUtility = jwtUtility;
         this.userDetailsService = userDetailsService;
     }
@@ -39,6 +39,7 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
         final String authorizationHeader = request.getHeader("Authorization");
 
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            System.out.println("Authorization header is missing or malformed: " + authorizationHeader);
             chain.doFilter(request, response);
             return;
         }
@@ -50,27 +51,51 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
                 String email = jwtUtility.extractEmail(jwt);
                 String roleName = jwtUtility.extractRole(jwt);
 
+                System.out.println("JWT Token validated. Email: " + email + ", Role: " + roleName);
+
                 if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                    UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+                    try {
+                        UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+                        System.out.println("User details loaded successfully for email: " + email);
 
-                    GrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + roleName);
-                    List<GrantedAuthority> combinedAuthorities = new ArrayList<>(userDetails.getAuthorities());
-                    combinedAuthorities.add(authority);
+                        GrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + roleName);
+                        List<GrantedAuthority> combinedAuthorities = new ArrayList<>(userDetails.getAuthorities());
+                        combinedAuthorities.add(authority);
 
-                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                            userDetails, null, combinedAuthorities);
-                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                                userDetails, null, combinedAuthorities);
+                        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+                        System.out.println("Authentication set in SecurityContext. Authorities: " + combinedAuthorities);
+                    } catch (Exception e) {
+                        System.err.println("Error loading user details: " + e.getMessage());
+                        e.printStackTrace();
+                        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                        return;
+                    }
+                } else {
+                    System.out.println("Email is null or authentication already exists in context");
                 }
             } else {
+                System.err.println("JWT Token validation failed");
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 return;
             }
         } catch (Exception e) {
+            System.err.println("Error processing JWT token: " + e.getMessage());
+            System.err.println("Token that caused error: " + jwt);
+            e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
 
-        chain.doFilter(request, response);
+        try {
+            chain.doFilter(request, response);
+        } catch (Exception e) {
+            System.err.println("Error in filter chain: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
     }
 }

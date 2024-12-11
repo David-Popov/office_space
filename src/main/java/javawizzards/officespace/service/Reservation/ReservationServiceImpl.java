@@ -29,9 +29,9 @@ public class ReservationServiceImpl implements ReservationService {
     private final UserRepository userRepository;
     private final ModelMapper modelMapper;
 
-    public ReservationServiceImpl(ReservationRepository reservationRepository, 
-                                  OfficeRoomRepository officeRoomRepository, 
-                                  UserRepository userRepository, 
+    public ReservationServiceImpl(ReservationRepository reservationRepository,
+                                  OfficeRoomRepository officeRoomRepository,
+                                  UserRepository userRepository,
                                   ModelMapper modelMapper) {
         this.reservationRepository = reservationRepository;
         this.officeRoomRepository = officeRoomRepository;
@@ -45,12 +45,14 @@ public class ReservationServiceImpl implements ReservationService {
             OfficeRoom officeRoom = officeRoomRepository.findById(reservationDto.getOfficeRoomId())
                     .orElseThrow(ReservationCustomException.ReservationNotFoundException::new);
 
+            User user = userRepository.findById(reservationDto.getUserId()).orElseThrow(ReservationCustomException.ReservationNotFoundException::new);
+
             Reservation reservation = new Reservation();
             reservation.setReservationTitle(reservationDto.getReservationTitle());
-            reservation.setUserId(reservationDto.getUserId());
+            reservation.setUser(user);
             reservation.setStartDateTime(reservationDto.getStartDateTime());
             reservation.setEndDateTime(reservationDto.getEndDateTime());
-            reservation.setStatus(ReservationStatus.CONFIRMED);
+            reservation.setStatus(ReservationStatus.PENDING);
             reservation.setOfficeRoom(officeRoom);
             reservation.setDurationAsHours((reservationDto.getDurationAsHours()));
 
@@ -70,7 +72,10 @@ public class ReservationServiceImpl implements ReservationService {
                 reservation.setEvent(event);
             }
 
+            user.getReservations().add(reservation);
+
             Reservation savedReservation = reservationRepository.save(reservation);
+            userRepository.save(user);
             return mapToDto(savedReservation);
         } catch (Exception e) {
             throw new RuntimeException("Error creating reservation", e);
@@ -102,8 +107,10 @@ public class ReservationServiceImpl implements ReservationService {
                         }
                     });
 
+            User user = userRepository.findById(reservationDto.getUserId()).orElseThrow(ReservationCustomException.ReservationNotFoundException::new);
+
             existingReservation.setReservationTitle(reservationDto.getReservationTitle());
-            existingReservation.setUserId(reservationDto.getUserId());
+            existingReservation.setUser(user);
             existingReservation.setStartDateTime(reservationDto.getStartDateTime());
             existingReservation.setEndDateTime(reservationDto.getEndDateTime());
             existingReservation.setDurationAsHours(reservationDto.getDurationAsHours());
@@ -116,7 +123,7 @@ public class ReservationServiceImpl implements ReservationService {
             }
 
             List<User> updatedParticipants = reservationDto.getParticipants().stream()
-                    .map(user -> userRepository.findById(user.getId())
+                    .map(participant -> userRepository.findById(participant.getId())
                             .orElseThrow(ReservationCustomException.ReservationNotFoundException::new))
                     .collect(Collectors.toList());
             existingReservation.setParticipants(updatedParticipants);
