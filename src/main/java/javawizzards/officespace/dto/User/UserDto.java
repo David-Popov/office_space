@@ -3,6 +3,7 @@ package javawizzards.officespace.dto.User;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
+import javawizzards.officespace.dto.Payment.PaymentResponse;
 import javawizzards.officespace.dto.Reservation.ReservationDto;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -30,9 +31,6 @@ public class UserDto implements Serializable {
     @JsonProperty("username")
     private String username;
 
-//    @JsonProperty("pictureUrl")
-//    private String pictureUrl;
-
     @NotNull(message = "FirstName can't be null")
     @JsonProperty("firstName")
     private String firstName;
@@ -45,9 +43,6 @@ public class UserDto implements Serializable {
     @JsonProperty("phone")
     private String phone;
 
-//    @JsonProperty("address")
-//    private String address;
-
     @NotNull
     @JsonProperty("roleId")
     private int roleId;
@@ -59,4 +54,8 @@ public class UserDto implements Serializable {
     @NotNull
     @JsonProperty("reservations")
     private List<ReservationDto> reservations;
+
+    @NotNull
+    @JsonProperty("payments")
+    private List<PaymentResponse> payments;
 }

@@ -16,7 +16,7 @@ public class ResourceDto {
     private String name;
 
     @NotNull(message = "Resource name can't be null")
-    @JsonProperty("resource_name")
+    @JsonProperty("resource_type")
     private String type;
 
     @NotNull(message = "Resource quantity can't be null")
