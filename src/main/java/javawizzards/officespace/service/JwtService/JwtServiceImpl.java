@@ -1,11 +1,8 @@
 package javawizzards.officespace.service.JwtService;
 
-import com.nimbusds.jose.shaded.gson.Gson;
-import com.nimbusds.jose.shaded.gson.GsonBuilder;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import javawizzards.officespace.configuration.JsonAdapter;
 import javawizzards.officespace.entity.User;
 import javawizzards.officespace.enumerations.User.RoleEnum;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,7 +11,6 @@ import org.springframework.stereotype.Service;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
-import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;

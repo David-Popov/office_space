@@ -9,6 +9,7 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -359,4 +360,141 @@ public class EmailService {
         
             sendHtmlEmail(to, "Reservation Confirmation - OfficeSpace", htmlTemplate);
         }
+
+    public void sendPaymentReceipt(
+            String to,
+            String username,
+            BigDecimal amount,
+            String currency,
+            String description,
+            String receiptUrl,
+            String paymentDate,
+            String paymentId
+    ) throws MessagingException {
+        String htmlTemplate = """
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Payment Receipt - OfficeSpace</title>
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    line-height: 1.6;
+                    color: #333333;
+                    margin: 0;
+                    padding: 0;
+                }
+                .container {
+                    max-width: 600px;
+                    margin: 0 auto;
+                    padding: 20px;
+                }
+                .header {
+                    background-color: #2563eb;
+                    color: white;
+                    padding: 30px;
+                    text-align: center;
+                }
+                .content {
+                    background-color: #ffffff;
+                    padding: 30px;
+                    border-radius: 5px;
+                    margin-top: 20px;
+                }
+                .payment-details {
+                    background-color: #f8fafc;
+                    padding: 20px;
+                    border-radius: 5px;
+                    margin: 20px 0;
+                }
+                .footer {
+                    text-align: center;
+                    padding: 20px;
+                    color: #666666;
+                    font-size: 12px;
+                }
+                .button {
+                    display: inline-block;
+                    padding: 12px 24px;
+                    background-color: #2563eb;
+                    color: white;
+                    text-decoration: none;
+                    border-radius: 5px;
+                    margin: 20px 0;
+                }
+                .highlight {
+                    color: #2563eb;
+                    font-weight: bold;
+                }
+                .detail-row {
+                    display: flex;
+                    justify-content: space-between;
+                    margin: 10px 0;
+                    padding: 5px 0;
+                    border-bottom: 1px solid #e2e8f0;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>Payment Receipt</h1>
+                </div>
+                
+                <div class="content">
+                    <h2>Hello %s,</h2>
+                    
+                    <p>Thank you for your payment. Here are your payment details:</p>
+                    
+                    <div class="payment-details">
+                        <div class="detail-row">
+                            <strong>Payment ID:</strong>
+                            <span>%s</span>
+                        </div>
+                        <div class="detail-row">
+                            <strong>Date:</strong>
+                            <span>%s</span>
+                        </div>
+                        <div class="detail-row">
+                            <strong>Amount:</strong>
+                            <span class="highlight">%s %s</span>
+                        </div>
+                        <div class="detail-row">
+                            <strong>Description:</strong>
+                            <span>%s</span>
+                        </div>
+                    </div>
+
+                    <center>
+                        <a href="%s" class="button">View Full Receipt</a>
+                    </center>
+
+                    <p>For any questions about this payment, please contact our support team at <span class="highlight">support@officespace.com</span>.</p>
+                    
+                    <p>Best regards,<br>The OfficeSpace Team</p>
+                </div>
+                
+                <div class="footer">
+                    <p>This receipt was sent to %s</p>
+                    <p>Please keep this receipt for your records.</p>
+                    <p>&copy; 2024 OfficeSpace. All rights reserved.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """.formatted(
+                username,
+                paymentId,
+                paymentDate,
+                amount.toString(),
+                currency.toUpperCase(),
+                description,
+                receiptUrl,
+                to
+        );
+
+        sendHtmlEmail(to, "Payment Receipt - OfficeSpace", htmlTemplate);
+    }
 }

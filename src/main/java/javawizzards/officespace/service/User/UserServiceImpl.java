@@ -1,6 +1,5 @@
 package javawizzards.officespace.service.User;
 
-import javawizzards.officespace.dto.OfficeRoom.OfficeRoomDto;
 import javawizzards.officespace.dto.User.*;
 import javawizzards.officespace.entity.Role;
 import javawizzards.officespace.entity.User;
@@ -30,16 +29,14 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     private final ModelMapper modelMapper;
     private final BCryptPasswordEncoder passwordEncoder;
     private final RoleService roleService;
-    private final JwtUtility jwtUtility;
     private final JwtService jwtService;
     private final Logger logger;
 
-    public UserServiceImpl(UserRepository userRepository, ModelMapper modelMapper, BCryptPasswordEncoder passwordEncoder, RoleService roleService, JwtUtility jwtUtility, JwtService jwtService) {
+    public UserServiceImpl(UserRepository userRepository, ModelMapper modelMapper, BCryptPasswordEncoder passwordEncoder, RoleService roleService, JwtService jwtService) {
         this.userRepository = userRepository;
         this.modelMapper = modelMapper;
         this.passwordEncoder = passwordEncoder;
         this.roleService = roleService;
-        this.jwtUtility = jwtUtility;
         this.jwtService = jwtService;
         this.logger = Logger.getLogger(this.getClass().getName());
     }
@@ -54,9 +51,38 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             }
 
             UserDto userDto = this.modelMapper.map(user, UserDto.class);
-//            userDto.setRoleName(this.setUserDtoRoleName(userDto));
             this.setUserDtoRoleName(userDto);
             return userDto;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public User getUserEntityById(UUID id) {
+        try{
+            User user = this.userRepository.findById(id).orElse(null);
+
+            if (user == null) {
+                throw new UsernameNotFoundException("User not found");
+            }
+
+            return user;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public User getUserEntityByEmail(String email) {
+        try{
+            User user = this.userRepository.findByEmail(email).orElse(null);
+
+            if (user == null) {
+                throw new UsernameNotFoundException("User not found");
+            }
+
+            return user;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

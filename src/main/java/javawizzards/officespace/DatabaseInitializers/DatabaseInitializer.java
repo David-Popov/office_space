@@ -1,16 +1,10 @@
 package javawizzards.officespace.DatabaseInitializers;
 
 import javawizzards.officespace.entity.*;
-import javawizzards.officespace.enumerations.OfficeRoom.RoomStatus;
-import javawizzards.officespace.enumerations.OfficeRoom.RoomType;
-import javawizzards.officespace.enumerations.Reservation.ReservationStatus;
 import javawizzards.officespace.enumerations.User.RoleEnum;
 import javawizzards.officespace.repository.*;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
-
-import java.time.LocalDateTime;
-import java.util.List;
 
 
 @Component
