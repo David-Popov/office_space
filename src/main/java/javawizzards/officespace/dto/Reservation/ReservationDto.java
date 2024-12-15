@@ -1,6 +1,5 @@
 package javawizzards.officespace.dto.Reservation;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.validation.Valid;
 import javawizzards.officespace.dto.User.UserDto;
 import javawizzards.officespace.enumerations.Reservation.ReservationStatus;

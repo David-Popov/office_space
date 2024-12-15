@@ -6,9 +6,7 @@ import javawizzards.officespace.entity.Event;
 import javawizzards.officespace.entity.OfficeRoom;
 import javawizzards.officespace.entity.Reservation;
 import javawizzards.officespace.entity.User;
-import javawizzards.officespace.enumerations.OfficeRoom.RoomType;
 import javawizzards.officespace.enumerations.Reservation.ReservationStatus;
-import javawizzards.officespace.enumerations.User.UserMessages;
 import javawizzards.officespace.exception.Reservation.ReservationCustomException;
 import javawizzards.officespace.repository.OfficeRoomRepository;
 import javawizzards.officespace.repository.ReservationRepository;
@@ -42,10 +40,31 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     public ReservationDto createReservation(CreateReservationDto reservationDto) {
         try {
-            OfficeRoom officeRoom = officeRoomRepository.findById(reservationDto.getOfficeRoomId())
-                    .orElseThrow(ReservationCustomException.ReservationNotFoundException::new);
+            if (reservationDto == null) {
+                throw new ReservationCustomException.ReservationNotFoundException();
+            }
 
-            User user = userRepository.findById(reservationDto.getUserId()).orElseThrow(ReservationCustomException.ReservationNotFoundException::new);
+            if (reservationDto.getStartDateTime() == null || reservationDto.getEndDateTime() == null) {
+                throw new ReservationCustomException.InvalidReservationDateException();
+            }
+
+            if (reservationDto.getStartDateTime().isAfter(reservationDto.getEndDateTime())) {
+                throw new ReservationCustomException.InvalidReservationDateException();
+            }
+
+            OfficeRoom officeRoom = officeRoomRepository.findById(reservationDto.getOfficeRoomId())
+                    .orElseThrow(() -> new ReservationCustomException.ReservationNotFoundException());
+
+            User user = userRepository.findById(reservationDto.getUserId())
+                    .orElseThrow(() -> new ReservationCustomException.ReservationNotFoundException());
+
+            reservationRepository.findByOfficeRoomIdAndStartDateTimeBetween(
+                            reservationDto.getOfficeRoomId(),
+                            reservationDto.getStartDateTime(),
+                            reservationDto.getEndDateTime())
+                    .ifPresent(existingReservation -> {
+                        throw new ReservationCustomException.ReservationConflictException();
+                    });
 
             Reservation reservation = new Reservation();
             reservation.setReservationTitle(reservationDto.getReservationTitle());
@@ -58,7 +77,7 @@ public class ReservationServiceImpl implements ReservationService {
 
             List<User> participants = reservationDto.getParticipantIds().stream()
                     .map(userId -> userRepository.findById(userId)
-                    .orElseThrow(ReservationCustomException.ReservationNotFoundException::new))
+                            .orElseThrow(() -> new ReservationCustomException.ReservationNotFoundException()))
                     .collect(Collectors.toList());
             reservation.setParticipants(participants);
 
@@ -77,6 +96,8 @@ public class ReservationServiceImpl implements ReservationService {
             Reservation savedReservation = reservationRepository.save(reservation);
             userRepository.save(user);
             return mapToDto(savedReservation);
+        } catch (ReservationCustomException e) {
+            throw e;
         } catch (Exception e) {
             throw new RuntimeException("Error creating reservation", e);
         }
@@ -85,9 +106,15 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     public void deleteReservation(UUID id) {
         try {
+            if (id == null) {
+                throw new ReservationCustomException.ReservationNotFoundException();
+            }
+
             Reservation reservation = reservationRepository.findById(id)
-                    .orElseThrow(ReservationCustomException.ReservationNotFoundException::new);
+                    .orElseThrow(() -> new ReservationCustomException.ReservationNotFoundException());
             reservationRepository.delete(reservation);
+        } catch (ReservationCustomException e) {
+            throw e;
         } catch (Exception e) {
             throw new RuntimeException("Error deleting reservation", e);
         }
@@ -96,18 +123,33 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     public ReservationDto updateReservation(UUID reservationId, ReservationDto reservationDto) {
         try {
+            if (reservationId == null || reservationDto == null) {
+                throw new ReservationCustomException.ReservationNotFoundException();
+            }
+
+            if (reservationDto.getStartDateTime() == null || reservationDto.getEndDateTime() == null) {
+                throw new ReservationCustomException.InvalidReservationDateException();
+            }
+
+            if (reservationDto.getStartDateTime().isAfter(reservationDto.getEndDateTime())) {
+                throw new ReservationCustomException.InvalidReservationDateException();
+            }
+
             Reservation existingReservation = reservationRepository.findById(reservationId)
-                    .orElseThrow(ReservationCustomException.ReservationNotFoundException::new);
+                    .orElseThrow(() -> new ReservationCustomException.ReservationNotFoundException());
 
             reservationRepository.findByOfficeRoomIdAndStartDateTimeBetween(
-                    reservationDto.getOfficeRoomId(), reservationDto.getStartDateTime(), reservationDto.getEndDateTime())
+                            reservationDto.getOfficeRoomId(),
+                            reservationDto.getStartDateTime(),
+                            reservationDto.getEndDateTime())
                     .ifPresent(reservation -> {
-                        if (reservation.getId() != existingReservation.getId()) {
+                        if (!reservation.getId().equals(existingReservation.getId())) {
                             throw new ReservationCustomException.ReservationConflictException();
                         }
                     });
 
-            User user = userRepository.findById(reservationDto.getUserId()).orElseThrow(ReservationCustomException.ReservationNotFoundException::new);
+            User user = userRepository.findById(reservationDto.getUserId())
+                    .orElseThrow(() -> new ReservationCustomException.ReservationNotFoundException());
 
             existingReservation.setReservationTitle(reservationDto.getReservationTitle());
             existingReservation.setUser(user);
@@ -116,15 +158,15 @@ public class ReservationServiceImpl implements ReservationService {
             existingReservation.setDurationAsHours(reservationDto.getDurationAsHours());
             existingReservation.setStatus(reservationDto.getStatus());
 
-            if (existingReservation.getOfficeRoom().getId() != reservationDto.getOfficeRoomId()) {
+            if (!existingReservation.getOfficeRoom().getId().equals(reservationDto.getOfficeRoomId())) {
                 OfficeRoom officeRoom = officeRoomRepository.findById(reservationDto.getOfficeRoomId())
-                        .orElseThrow(ReservationCustomException.ReservationNotFoundException::new);
+                        .orElseThrow(() -> new ReservationCustomException.ReservationNotFoundException());
                 existingReservation.setOfficeRoom(officeRoom);
             }
 
             List<User> updatedParticipants = reservationDto.getParticipants().stream()
                     .map(participant -> userRepository.findById(participant.getId())
-                            .orElseThrow(ReservationCustomException.ReservationNotFoundException::new))
+                            .orElseThrow(() -> new ReservationCustomException.ReservationNotFoundException()))
                     .collect(Collectors.toList());
             existingReservation.setParticipants(updatedParticipants);
 
@@ -143,6 +185,8 @@ public class ReservationServiceImpl implements ReservationService {
 
             Reservation updatedReservation = reservationRepository.save(existingReservation);
             return mapToDto(updatedReservation);
+        } catch (ReservationCustomException e) {
+            throw e;
         } catch (Exception e) {
             throw new RuntimeException("Error updating reservation", e);
         }
@@ -151,9 +195,15 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     public ReservationDto findReservationById(UUID id) {
         try {
+            if (id == null) {
+                throw new ReservationCustomException.ReservationNotFoundException();
+            }
+
             Reservation reservation = reservationRepository.findById(id)
-                    .orElseThrow(ReservationCustomException.ReservationNotFoundException::new);
+                    .orElseThrow(() -> new ReservationCustomException.ReservationNotFoundException());
             return mapToDto(reservation);
+        } catch (ReservationCustomException e) {
+            throw e;
         } catch (Exception e) {
             throw new RuntimeException("Error finding reservation by ID", e);
         }
@@ -162,8 +212,20 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     public List<ReservationDto> findReservationsByOfficeRoomId(UUID officeRoomId) {
         try {
-            return reservationRepository.findByOfficeRoomId(officeRoomId)
-                    .stream().map(this::mapToDto).collect(Collectors.toList());
+            if (officeRoomId == null) {
+                throw new ReservationCustomException.ReservationNotFoundException();
+            }
+
+            List<Reservation> reservations = reservationRepository.findByOfficeRoomId(officeRoomId);
+            if (reservations.isEmpty()) {
+                throw new ReservationCustomException.ReservationNotFoundException();
+            }
+
+            return reservations.stream()
+                    .map(this::mapToDto)
+                    .collect(Collectors.toList());
+        } catch (ReservationCustomException e) {
+            throw e;
         } catch (Exception e) {
             throw new RuntimeException("Error finding reservations by office room ID", e);
         }
@@ -172,8 +234,20 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     public List<ReservationDto> findReservationsByUserId(UUID userId) {
         try {
-            return reservationRepository.findByUserId(userId)
-                    .stream().map(this::mapToDto).collect(Collectors.toList());
+            if (userId == null) {
+                throw new ReservationCustomException.ReservationNotFoundException();
+            }
+
+            List<Reservation> reservations = reservationRepository.findByUserId(userId);
+            if (reservations.isEmpty()) {
+                throw new ReservationCustomException.ReservationNotFoundException();
+            }
+
+            return reservations.stream()
+                    .map(this::mapToDto)
+                    .collect(Collectors.toList());
+        } catch (ReservationCustomException e) {
+            throw e;
         } catch (Exception e) {
             throw new RuntimeException("Error finding reservations by user Id", e);
         }
@@ -181,14 +255,33 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     public List<String> getReservationStatusList() {
-        List<String> statusList = Stream.of(ReservationStatus.values())
-                .map(Enum::name)
-                .collect(Collectors.toList());
+        try {
+            List<String> statusList = Stream.of(ReservationStatus.values())
+                    .map(Enum::name)
+                    .collect(Collectors.toList());
 
-        return statusList;
+            if (statusList.isEmpty()) {
+                throw new ReservationCustomException.ReservationNotFoundException();
+            }
+
+            return statusList;
+        } catch (ReservationCustomException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RuntimeException("Error getting reservation status list", e);
+        }
     }
 
     private ReservationDto mapToDto(Reservation reservation) {
-        return modelMapper.map(reservation, ReservationDto.class);
+        try {
+            if (reservation == null) {
+                throw new ReservationCustomException.ReservationNotFoundException();
+            }
+            return modelMapper.map(reservation, ReservationDto.class);
+        } catch (ReservationCustomException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RuntimeException("Error mapping reservation to DTO", e);
+        }
     }
 }

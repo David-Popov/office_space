@@ -1,28 +1,17 @@
 package javawizzards.officespace.dto.OfficeRoom;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
-import javawizzards.officespace.dto.Company.CompanyDto;
-import javawizzards.officespace.dto.Reservation.ReservationDto;
-import javawizzards.officespace.dto.Resource.ResourceDto;
 import javawizzards.officespace.enumerations.OfficeRoom.RoomStatus;
 import javawizzards.officespace.enumerations.OfficeRoom.RoomType;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-import jakarta.validation.constraints.NotNull;
+import lombok.Data;
 
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.UUID;
 
-@NoArgsConstructor
-@AllArgsConstructor
-@Getter
-@Setter
-public class OfficeRoomDto{
+@Data
+public class UpdateOfficeRoomRequest {
     @JsonProperty("id")
     private UUID id;
 
@@ -60,13 +49,7 @@ public class OfficeRoomDto{
     @JsonProperty("price_per_hour")
     private BigDecimal pricePerHour;
 
-    @NotNull(message = "Company information can't be null")
+    @NotNull(message = "Company Id can't be null")
     @JsonProperty("company")
-    private CompanyDto company;
-
-    @JsonProperty("reservations")
-    private List<ReservationDto> reservations;
-
-    @JsonProperty("resources")
-    private List<ResourceDto> resources;
+    private UUID companyId;
 }

@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface OfficeRoomRepository extends JpaRepository<OfficeRoom, UUID> {
-    Optional<OfficeRoom> findById(UUID id);
+//    Optional<OfficeRoom> findById(UUID id);
     List<OfficeRoom> findByStatus(String status);
     Optional<OfficeRoom> findByName(String name);
     List<OfficeRoom> findByCompanyName(String companyName);

@@ -3,19 +3,10 @@ package javawizzards.officespace.dto.User;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.Data;
 
-import java.io.Serializable;
-
-@NoArgsConstructor
-@AllArgsConstructor
-@Getter
-@Setter
-public class RegisterUserDto implements Serializable {
-
+@Data
+public class UpdateUserRequest {
     @NotNull(message = "Email can't be null")
     @Email(message = "Email is invalid")
     @JsonProperty("email")
@@ -24,13 +15,6 @@ public class RegisterUserDto implements Serializable {
     @NotNull(message = "Username can't be null")
     @JsonProperty("username")
     private String username;
-
-    @NotNull(message = "Password can't be null")
-    @JsonProperty("password")
-    private String password;
-
-//    @JsonProperty("pictureUrl")
-//    private String pictureUrl;
 
     @NotNull(message = "FirstName can't be null")
     @JsonProperty("firstName")
@@ -44,6 +28,7 @@ public class RegisterUserDto implements Serializable {
     @JsonProperty("phone")
     private String phone;
 
-//    @JsonProperty("address")
-//    private String address;
+    @NotNull
+    @JsonProperty("roleId")
+    private int roleId;
 }

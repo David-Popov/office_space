@@ -1,14 +1,14 @@
 package javawizzards.officespace.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import jakarta.validation.Valid;
 import javawizzards.officespace.dto.Request.Request;
 import javawizzards.officespace.dto.Response.Response;
 import javawizzards.officespace.dto.User.GoogleUserDto;
-import javawizzards.officespace.dto.User.UserDto;
+import javawizzards.officespace.dto.User.UpdateUserRequest;
 import javawizzards.officespace.enumerations.User.UserMessages;
 import javawizzards.officespace.service.RequestAndResponse.RequestAndResponseService;
 import javawizzards.officespace.service.User.UserService;
-import javawizzards.officespace.utility.JwtUtility;
 import javawizzards.officespace.utility.LoggingUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,12 +23,10 @@ import java.util.UUID;
 public class AdminController {
     private final UserService userService;
     private final RequestAndResponseService requestAndResponseService;
-    private final JwtUtility jwtUtility;
 
-    public AdminController(UserService userService, RequestAndResponseService requestAndResponseService, JwtUtility jwtUtility) {
+    public AdminController(UserService userService, RequestAndResponseService requestAndResponseService) {
         this.userService = userService;
         this.requestAndResponseService = requestAndResponseService;
-        this.jwtUtility = jwtUtility;
     }
 
     @DeleteMapping("/delete-user/{id}")
@@ -58,8 +56,8 @@ public class AdminController {
         }
     }
 
-    @PutMapping("/update")
-    public ResponseEntity<Response<?>> updateUser(@RequestBody Request<UserDto> request, BindingResult bindingResult) throws JsonProcessingException {
+    @PutMapping("/update-user/{id}")
+    public ResponseEntity<Response<?>> updateUser(@PathVariable UUID id, @RequestBody @Valid Request<UpdateUserRequest> request, BindingResult bindingResult) throws JsonProcessingException {
         Response<?> response;
 
         if (bindingResult.hasErrors()) {
@@ -68,7 +66,7 @@ public class AdminController {
         }
 
         try{
-            var data = this.userService.updateUser(request.getData());
+            var data = this.userService.updateUser(id, request.getData());
             response = new Response<>(data, HttpStatus.OK, UserMessages.USER_UPDATE_SUCCESS.getMessage());
             this.requestAndResponseService.CreateRequestAndResponse(request, response, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
             return ResponseEntity.ok(response);
@@ -81,7 +79,7 @@ public class AdminController {
     }
 
     @PutMapping("/update-google-user")
-    public ResponseEntity<Response<?>> updateGoogleUser(@RequestBody Request<GoogleUserDto> request, BindingResult bindingResult) throws JsonProcessingException {
+    public ResponseEntity<Response<?>> updateGoogleUser(@RequestBody @Valid Request<GoogleUserDto> request, BindingResult bindingResult) throws JsonProcessingException {
         Response<?> response;
 
         if (bindingResult.hasErrors()) {

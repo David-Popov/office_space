@@ -1,23 +1,26 @@
 package javawizzards.officespace.service.OfficeRoom;
 
+import jakarta.transaction.Transactional;
+import javawizzards.officespace.dto.OfficeRoom.CreateOfficeRoomDto;
 import javawizzards.officespace.dto.OfficeRoom.OfficeRoomDto;
+import javawizzards.officespace.dto.OfficeRoom.UpdateOfficeRoomRequest;
 import javawizzards.officespace.dto.Reservation.CreateReservationDto;
-import javawizzards.officespace.dto.Reservation.ReservationDto;
 import javawizzards.officespace.dto.Resource.ResourceDto;
 import javawizzards.officespace.entity.*;
 import javawizzards.officespace.enumerations.OfficeRoom.RoomStatus;
 import javawizzards.officespace.enumerations.OfficeRoom.RoomType;
+import javawizzards.officespace.enumerations.Resource.ResourceStatus;
 import javawizzards.officespace.exception.OfficeRoom.OfficeRoomCustomException;
+import javawizzards.officespace.exception.Resource.ResourceCustomException;
 import javawizzards.officespace.repository.CompanyRepository;
 import javawizzards.officespace.repository.OfficeRoomRepository;
+import javawizzards.officespace.repository.ResourceRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -27,12 +30,14 @@ public class OfficeRoomServiceImpl implements OfficeRoomService {
 
     private final OfficeRoomRepository officeRoomRepository;
     private final CompanyRepository companyRepository;
+    private final ResourceRepository resourceRepository;
     private final ModelMapper modelMapper;
     private final Logger logger;
 
-    public OfficeRoomServiceImpl(OfficeRoomRepository officeRoomRepository, CompanyRepository companyRepository, ModelMapper modelMapper) {
+    public OfficeRoomServiceImpl(OfficeRoomRepository officeRoomRepository, CompanyRepository companyRepository, ResourceRepository resourceRepository, ModelMapper modelMapper) {
         this.officeRoomRepository = officeRoomRepository;
         this.companyRepository = companyRepository;
+        this.resourceRepository = resourceRepository;
         this.modelMapper = modelMapper;
         this.logger = Logger.getLogger(OfficeRoomServiceImpl.class.getName());
 
@@ -54,20 +59,22 @@ public class OfficeRoomServiceImpl implements OfficeRoomService {
     public List<OfficeRoomDto> getOfficeRooms() {
         try {
             List<OfficeRoom> officeRooms = officeRoomRepository.findAll();
+
             return officeRooms.stream()
                     .map(this::mapToDto)
                     .collect(Collectors.toList());
+        } catch (OfficeRoomCustomException e) {
+            throw e;
         } catch (Exception e) {
-            logger.severe("Error fetching office rooms: " + e.getMessage());
-            throw new RuntimeException("Failed to fetch office rooms", e);
+            throw new OfficeRoomCustomException.OfficeRoomCreationFailedException();
         }
     }
 
     @Override
-    public OfficeRoomDto createOfficeRoom(OfficeRoomDto officeRoomDto) {
+    public OfficeRoomDto createOfficeRoom(CreateOfficeRoomDto officeRoomDto) {
         try {
-            Company company = companyRepository.findById(officeRoomDto.getCompany().getId())
-                    .orElseThrow(OfficeRoomCustomException.OfficeRoomNotFoundException::new);
+            Company company = companyRepository.findById(officeRoomDto.getCompanyId())
+                    .orElseThrow(() -> new OfficeRoomCustomException.CompanyNotFoundException());
 
             OfficeRoom officeRoom = new OfficeRoom();
             officeRoom.setName(officeRoomDto.getOfficeRoomName());
@@ -85,245 +92,449 @@ public class OfficeRoomServiceImpl implements OfficeRoomService {
 
             OfficeRoom savedOfficeRoom = officeRoomRepository.save(officeRoom);
             return mapToDto(savedOfficeRoom);
+        } catch (OfficeRoomCustomException e) {
+            throw e;
         } catch (Exception e) {
-            logger.severe("Error occurred while creating office room: " + e.getMessage());
-            throw new RuntimeException("Failed to create office room", e);
+            throw new OfficeRoomCustomException.OfficeRoomCreationFailedException();
         }
     }
 
     @Override
-    public OfficeRoomDto updateOfficeRoom(UUID officeRoomId, OfficeRoomDto officeRoomDto) {
+    public OfficeRoomDto updateOfficeRoom(UUID id, UpdateOfficeRoomRequest officeRoomRequest) {
         try {
-            OfficeRoom existingOfficeRoom = officeRoomRepository.findById(officeRoomId)
-                    .orElseThrow(OfficeRoomCustomException.OfficeRoomNotFoundException::new);
+            if (id == null) {
+                throw new OfficeRoomCustomException.InvalidOfficeRoomDataException();
+            }
 
-            Company company = companyRepository.findById(officeRoomDto.getCompany().getId())
-                    .orElseThrow(OfficeRoomCustomException.OfficeRoomNotFoundException::new);
+            OfficeRoom existingOfficeRoom = officeRoomRepository.findById(id)
+                    .orElseThrow(() -> new OfficeRoomCustomException.OfficeRoomNotFoundException());
 
-            existingOfficeRoom.setName(officeRoomDto.getOfficeRoomName());
-            existingOfficeRoom.setAddress(officeRoomDto.getAddress());
-            existingOfficeRoom.setBuilding(officeRoomDto.getBuilding());
-            existingOfficeRoom.setFloor(officeRoomDto.getFloor());
-            existingOfficeRoom.setType(officeRoomDto.getType());
-            existingOfficeRoom.setCapacity(officeRoomDto.getCapacity());
-            existingOfficeRoom.setPictureUrl(officeRoomDto.getPictureUrl());
-            existingOfficeRoom.setPricePerHour(officeRoomDto.getPricePerHour());
-            existingOfficeRoom.setCompany(company);
+            Company company = companyRepository.findById(officeRoomRequest.getCompanyId())
+                    .orElseThrow(() -> new OfficeRoomCustomException.CompanyNotFoundException());
+
+            updateOfficeRoomFields(existingOfficeRoom, officeRoomRequest, company);
 
             OfficeRoom updatedOfficeRoom = officeRoomRepository.save(existingOfficeRoom);
             return mapToDto(updatedOfficeRoom);
+        } catch (OfficeRoomCustomException e) {
+            throw e;
         } catch (Exception e) {
-            logger.severe("Error occurred while updating office room: " + e.getMessage());
-            throw new RuntimeException("Failed to update office room", e);
+            throw new OfficeRoomCustomException.OfficeRoomUpdateFailedException();
         }
     }
 
     @Override
     public void deleteOfficeRoom(UUID officeRoomId) {
         try {
+            if (officeRoomId == null) {
+                throw new OfficeRoomCustomException.InvalidOfficeRoomDataException();
+            }
+
             OfficeRoom officeRoom = officeRoomRepository.findById(officeRoomId)
-                    .orElseThrow(OfficeRoomCustomException.OfficeRoomNotFoundException::new);
+                    .orElseThrow(() -> new OfficeRoomCustomException.OfficeRoomNotFoundException());
+
             officeRoomRepository.delete(officeRoom);
-        } catch (Exception e) {
-            logger.severe("Error occurred while deleting office room: " + e.getMessage());
+        } catch (OfficeRoomCustomException e) {
             throw e;
+        } catch (Exception e) {
+            throw new OfficeRoomCustomException.OfficeRoomDeletionFailedException();
         }
     }
 
     @Override
     public OfficeRoomDto findOfficeRoomById(UUID officeRoomId) {
         try {
+            if (officeRoomId == null) {
+                throw new OfficeRoomCustomException.InvalidOfficeRoomDataException();
+            }
+
             OfficeRoom officeRoom = officeRoomRepository.findById(officeRoomId)
-                    .orElseThrow(OfficeRoomCustomException.OfficeRoomNotFoundException::new);
+                    .orElseThrow(() -> new OfficeRoomCustomException.OfficeRoomNotFoundException());
             return mapToDto(officeRoom);
-        } catch (Exception e) {
-            logger.severe("Error occurred while fetching office room by ID: " + e.getMessage());
+        } catch (OfficeRoomCustomException e) {
             throw e;
+        } catch (Exception e) {
+            throw new OfficeRoomCustomException.InvalidOfficeRoomDataException();
         }
     }
 
     @Override
     public List<OfficeRoomDto> findOfficeRoomsByCompanyName(String companyName) {
         try {
+            if (companyName == null || companyName.trim().isEmpty()) {
+                throw new OfficeRoomCustomException.InvalidOfficeRoomDataException();
+            }
+
             List<OfficeRoom> officeRooms = officeRoomRepository.findByCompanyName(companyName);
-            return officeRooms.stream().map(this::mapToDto).collect(Collectors.toList());
-        } catch (Exception e) {
-            logger.severe("Error occurred while fetching office rooms by company name: " + e.getMessage());
+            if (officeRooms.isEmpty()) {
+                throw new OfficeRoomCustomException.OfficeRoomNotFoundException();
+            }
+
+            return officeRooms.stream()
+                    .map(this::mapToDto)
+                    .collect(Collectors.toList());
+        } catch (OfficeRoomCustomException e) {
             throw e;
+        } catch (Exception e) {
+            throw new OfficeRoomCustomException.InvalidOfficeRoomDataException();
         }
     }
 
     @Override
     public List<OfficeRoomDto> findOfficeRoomByStatus(String status) {
         try {
-            return officeRoomRepository.findByStatus(status).stream()
+            if (status == null || status.trim().isEmpty()) {
+                throw new OfficeRoomCustomException.InvalidRoomStatusException();
+            }
+
+            List<OfficeRoom> officeRooms = officeRoomRepository.findByStatus(status);
+            if (officeRooms.isEmpty()) {
+                throw new OfficeRoomCustomException.OfficeRoomNotFoundException();
+            }
+
+            return officeRooms.stream()
                     .map(this::mapToDto)
                     .collect(Collectors.toList());
-        } catch (Exception e) {
-            logger.severe("Error occurred while fetching office rooms by status: " + e.getMessage());
+        } catch (OfficeRoomCustomException e) {
             throw e;
-        }
-    }
-
-    @Override
-    public List<OfficeRoomDto> findOfficeRoomsByCapacity(int capacity) {
-        try {
-            List<OfficeRoom> officeRooms = officeRoomRepository.findByCapacity(capacity);
-            if (officeRooms.isEmpty()) {
-                throw new OfficeRoomCustomException.OfficeRoomNotFoundException();
-            }
-            return officeRooms.stream().map(this::mapToDto).collect(Collectors.toList());
         } catch (Exception e) {
-            logger.severe("Error occurred while fetching office rooms by capacity: " + e.getMessage());
-            throw e;
-        }
-    }
-
-    @Override
-    public List<OfficeRoomDto> findOfficeRoomsByFloor(String floor) {
-        try {
-            List<OfficeRoom> officeRooms = officeRoomRepository.findByFloor(floor);
-            if (officeRooms.isEmpty()) {
-                throw new OfficeRoomCustomException.OfficeRoomNotFoundException();
-            }
-            return officeRooms.stream().map(this::mapToDto).collect(Collectors.toList());
-        } catch (Exception e) {
-            logger.severe("Error occurred while fetching office rooms by floor: " + e.getMessage());
-            throw e;
+            throw new OfficeRoomCustomException.InvalidOfficeRoomDataException();
         }
     }
 
     @Override
     public List<OfficeRoomDto> findOfficeRoomsByType(String type) {
         try {
+            if (type == null || type.trim().isEmpty()) {
+                throw new OfficeRoomCustomException.InvalidRoomTypeException();
+            }
+
             List<OfficeRoom> officeRooms = officeRoomRepository.findByType(type);
             if (officeRooms.isEmpty()) {
                 throw new OfficeRoomCustomException.OfficeRoomNotFoundException();
             }
-            return officeRooms.stream().map(this::mapToDto).collect(Collectors.toList());
-        } catch (Exception e) {
-            logger.severe("Error occurred while fetching office rooms by type: " + e.getMessage());
+
+            return officeRooms.stream()
+                    .map(this::mapToDto)
+                    .collect(Collectors.toList());
+        } catch (OfficeRoomCustomException e) {
             throw e;
+        } catch (Exception e) {
+            throw new OfficeRoomCustomException.InvalidOfficeRoomDataException();
+        }
+    }
+
+    @Override
+    public List<OfficeRoomDto> findOfficeRoomsByCapacity(int capacity) {
+        try {
+            if (capacity <= 0) {
+                throw new OfficeRoomCustomException.InvalidCapacityException();
+            }
+
+            List<OfficeRoom> officeRooms = officeRoomRepository.findByCapacity(capacity);
+            if (officeRooms.isEmpty()) {
+                throw new OfficeRoomCustomException.OfficeRoomNotFoundException();
+            }
+
+            return officeRooms.stream()
+                    .map(this::mapToDto)
+                    .collect(Collectors.toList());
+        } catch (OfficeRoomCustomException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new OfficeRoomCustomException.InvalidOfficeRoomDataException();
+        }
+    }
+
+    @Override
+    public List<OfficeRoomDto> findOfficeRoomsByFloor(String floor) {
+        try {
+            if (floor == null || floor.trim().isEmpty()) {
+                throw new OfficeRoomCustomException.InvalidFloorException();
+            }
+
+            List<OfficeRoom> officeRooms = officeRoomRepository.findByFloor(floor);
+            if (officeRooms.isEmpty()) {
+                throw new OfficeRoomCustomException.OfficeRoomNotFoundException();
+            }
+
+            return officeRooms.stream()
+                    .map(this::mapToDto)
+                    .collect(Collectors.toList());
+        } catch (OfficeRoomCustomException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new OfficeRoomCustomException.InvalidOfficeRoomDataException();
         }
     }
 
     @Override
     public List<OfficeRoomDto> filterOfficeRooms(String name, String building, String floor, String type, Integer capacity) {
-        List<OfficeRoom> officeRooms = officeRoomRepository.filterByCriteria(name, building, floor, type, capacity);
-        return officeRooms.stream()
-                          .map(this::mapToDto)
-                          .collect(Collectors.toList());
-    }
-
-@Override
-public List<OfficeRoomDto> findAvailableRooms(LocalDateTime startDateTime, LocalDateTime endDateTime) {
-    try {
-        List<OfficeRoom> officeRooms = officeRoomRepository.findAvailableRooms(startDateTime, endDateTime);
-        return officeRooms.stream().map(this::mapToDto).collect(Collectors.toList());
-    } catch (Exception e) {
-        logger.severe("Error occurred while finding available office rooms: " + e.getMessage());
-        throw e;
-    }
-}
-
-    @Override
-    public OfficeRoomDto addResourceToRoom(UUID officeRoomId, ResourceDto resourceDto) {
         try {
-            OfficeRoom officeRoom = officeRoomRepository.findById(officeRoomId)
-                    .orElseThrow(OfficeRoomCustomException.OfficeRoomNotFoundException::new);
-
-            Resource resource = new Resource();
-            resource.setName(resourceDto.getName());
-//            resource.setAvailable(resourceDto.isAvailable());
-            resource.setOfficeRoom(officeRoom);
-
-            if (officeRoom.getResources() == null) {
-                officeRoom.setResources(new ArrayList<>());
+            List<OfficeRoom> officeRooms = officeRoomRepository.filterByCriteria(name, building, floor, type, capacity);
+            if (officeRooms.isEmpty()) {
+                throw new OfficeRoomCustomException.OfficeRoomNotFoundException();
             }
-            officeRoom.getResources().add(resource);
 
-            OfficeRoom updatedOfficeRoom = officeRoomRepository.save(officeRoom);
-
-            return mapToDto(updatedOfficeRoom);
-        } catch (Exception e) {
-            logger.severe("Error occurred while adding resource to office room: " + e.getMessage());
-            throw new RuntimeException("Failed to add resource to office room", e);
-        }
-    }
-
-    @Override
-    public OfficeRoomDto addResourcesToRoom(UUID officeRoomId, List<ResourceDto> resourceDtos) {
-        try {
-            OfficeRoom officeRoom = officeRoomRepository.findById(officeRoomId)
-                    .orElseThrow(OfficeRoomCustomException.OfficeRoomNotFoundException::new);
-
-            List<Resource> newResources = resourceDtos.stream()
-                    .map(dto -> {
-                        Resource resource = new Resource();
-                        resource.setName(dto.getName());
-//                        resource.setAvailable(dto.isAvailable());
-                        resource.setOfficeRoom(officeRoom);
-                        return resource;
-                    })
+            return officeRooms.stream()
+                    .map(this::mapToDto)
                     .collect(Collectors.toList());
-
-            if (officeRoom.getResources() == null) {
-                officeRoom.setResources(new ArrayList<>());
-            }
-            officeRoom.getResources().addAll(newResources);
-
-            OfficeRoom updatedOfficeRoom = officeRoomRepository.save(officeRoom);
-            return mapToDto(updatedOfficeRoom);
+        } catch (OfficeRoomCustomException e) {
+            throw e;
         } catch (Exception e) {
-            logger.severe("Error occurred while adding resources to office room: " + e.getMessage());
-            throw new RuntimeException("Failed to add resources to office room", e);
+            throw new OfficeRoomCustomException.InvalidOfficeRoomDataException();
         }
     }
 
     @Override
-    public OfficeRoomDto removeResourceFromRoom(UUID officeRoomId, UUID resourceId) {
+    public List<OfficeRoomDto> findAvailableRooms(LocalDateTime startDateTime, LocalDateTime endDateTime) {
         try {
-            OfficeRoom officeRoom = officeRoomRepository.findById(officeRoomId)
-                    .orElseThrow(OfficeRoomCustomException.OfficeRoomNotFoundException::new);
+            if (startDateTime == null || endDateTime == null) {
+                throw new OfficeRoomCustomException.InvalidOfficeRoomDataException();
+            }
+            if (startDateTime.isAfter(endDateTime)) {
+                throw new OfficeRoomCustomException.RoomNotAvailableException();
+            }
 
-            officeRoom.getResources().removeIf(resource -> resource.getId().equals(resourceId));
+            List<OfficeRoom> availableRooms = officeRoomRepository.findAvailableRooms(startDateTime, endDateTime);
+            if (availableRooms.isEmpty()) {
+                throw new OfficeRoomCustomException.RoomNotAvailableException();
+            }
 
-            OfficeRoom updatedOfficeRoom = officeRoomRepository.save(officeRoom);
-            return mapToDto(updatedOfficeRoom);
+            return availableRooms.stream()
+                    .map(this::mapToDto)
+                    .collect(Collectors.toList());
+        } catch (OfficeRoomCustomException e) {
+            throw e;
         } catch (Exception e) {
-            logger.severe("Error occurred while removing resource from office room: " + e.getMessage());
-            throw new RuntimeException("Failed to remove resource from office room", e);
+            throw new OfficeRoomCustomException.InvalidOfficeRoomDataException();
         }
+    }
+
+    @Override
+    @Transactional
+    public OfficeRoomDto addResourceToRoom(UUID officeRoomId, UUID resourceId) {
+        if (officeRoomId == null || resourceId == null) {
+            throw new OfficeRoomCustomException.InvalidOfficeRoomDataException();
+        }
+
+        OfficeRoom officeRoom = officeRoomRepository.findById(officeRoomId)
+                .orElseThrow(() -> new OfficeRoomCustomException.OfficeRoomNotFoundException());
+
+        Resource resource = resourceRepository.findById(resourceId)
+                .orElseThrow(() -> new ResourceCustomException.ResourceNotFoundException());
+
+        if (resource.getOfficeRoom() != null) {
+            if (resource.getOfficeRoom().getId().equals(officeRoomId)) {
+                throw new ResourceCustomException.ResourceAlreadyExistsException();
+            } else {
+                throw new ResourceCustomException.ResourceInUseException();
+            }
+        }
+
+        if (resource.getStatus() == ResourceStatus.UNDER_MAINTENANCE) {
+            throw new ResourceCustomException.ResourceUnderMaintenanceException();
+        }
+
+        resource.setOfficeRoom(officeRoom);
+        if (officeRoom.getResources() == null) {
+            officeRoom.setResources(new ArrayList<>());
+        }
+        officeRoom.getResources().add(resource);
+
+        OfficeRoom updatedOfficeRoom = officeRoomRepository.save(officeRoom);
+        return mapToDto(updatedOfficeRoom);
+    }
+
+    @Override
+    @Transactional
+    public OfficeRoomDto addResourcesToRoom(UUID officeRoomId, List<UUID> resourceIds) {
+        if (officeRoomId == null || resourceIds == null || resourceIds.isEmpty()) {
+            throw new OfficeRoomCustomException.InvalidOfficeRoomDataException();
+        }
+
+        OfficeRoom officeRoom = officeRoomRepository.findById(officeRoomId)
+                .orElseThrow(() -> new OfficeRoomCustomException.OfficeRoomNotFoundException());
+
+        List<Resource> resources = resourceIds.stream()
+                .map(id -> resourceRepository.findById(id)
+                        .orElseThrow(() -> new ResourceCustomException.ResourceNotFoundException()))
+                .collect(Collectors.toList());
+
+        for (Resource resource : resources) {
+            if (resource.getOfficeRoom() != null) {
+                if (resource.getOfficeRoom().getId().equals(officeRoomId)) {
+                    throw new ResourceCustomException.ResourceAlreadyExistsException();
+                } else {
+                    throw new ResourceCustomException.ResourceInUseException();
+                }
+            }
+            if (resource.getStatus() == ResourceStatus.UNDER_MAINTENANCE) {
+                throw new ResourceCustomException.ResourceUnderMaintenanceException();
+            }
+        }
+
+        if (officeRoom.getResources() == null) {
+            officeRoom.setResources(new ArrayList<>());
+        }
+
+        resources.forEach(resource -> {
+            resource.setOfficeRoom(officeRoom);
+            officeRoom.getResources().add(resource);
+        });
+
+        OfficeRoom updatedOfficeRoom = officeRoomRepository.save(officeRoom);
+        return mapToDto(updatedOfficeRoom);
+    }
+
+    @Override
+    @Transactional
+    public OfficeRoomDto removeResourceFromRoom(UUID officeRoomId, UUID resourceId) {
+        if (officeRoomId == null || resourceId == null) {
+            throw new OfficeRoomCustomException.InvalidOfficeRoomDataException();
+        }
+
+        OfficeRoom officeRoom = officeRoomRepository.findById(officeRoomId)
+                .orElseThrow(() -> new OfficeRoomCustomException.OfficeRoomNotFoundException());
+
+        Resource resource = resourceRepository.findById(resourceId)
+                .orElseThrow(() -> new ResourceCustomException.ResourceNotFoundException());
+
+        if (resource.getOfficeRoom() == null || !resource.getOfficeRoom().getId().equals(officeRoomId)) {
+            throw new ResourceCustomException.ResourceNotFoundException();
+        }
+
+        if (resource.getStatus() == ResourceStatus.IN_USE) {
+            throw new ResourceCustomException.ResourceInUseException();
+        }
+
+        resource.setOfficeRoom(null);
+        officeRoom.getResources().remove(resource);
+
+        OfficeRoom updatedOfficeRoom = officeRoomRepository.save(officeRoom);
+        return mapToDto(updatedOfficeRoom);
+    }
+
+    private void validateResourceDtos(List<ResourceDto> resourceDtos, OfficeRoom officeRoom) {
+        Set<String> resourceKeys = new HashSet<>();
+        for (ResourceDto dto : resourceDtos) { //we check for duplicate resources in the dto
+            String key = dto.getName() + "-" + dto.getType();
+            if (!resourceKeys.add(key)) {
+                throw new ResourceCustomException.ResourceAlreadyExistsException();
+            }
+
+            boolean exists = officeRoom.getResources().stream()
+                    .anyMatch(r -> r.getName().equals(dto.getName())
+                            && r.getType().equals(dto.getType()));
+            if (exists) {
+                throw new ResourceCustomException.ResourceAlreadyExistsException();
+            }
+
+            if (dto.getQuantity() < 0) {
+                throw new ResourceCustomException.InvalidQuantityException();
+            }
+        }
+    }
+
+    private Resource createResourceFromDto(ResourceDto dto, OfficeRoom officeRoom) {
+        Resource resource = new Resource();
+        resource.setName(dto.getName());
+        resource.setType(dto.getType());
+        resource.setQuantity(dto.getQuantity());
+        resource.setDescription(dto.getDescription());
+        resource.setStatus(ResourceStatus.AVAILABLE);
+        resource.setOfficeRoom(officeRoom);
+        return resource;
     }
 
     @Override
     public List<String> getOfficeRoomStatusList() {
-        List<String> statusList = Stream.of(RoomStatus.values())
-                .map(Enum::name)
-                .collect(Collectors.toList());
+        try {
+            List<String> statusList = Stream.of(RoomStatus.values())
+                    .map(Enum::name)
+                    .collect(Collectors.toList());
 
-        return statusList;
+            if (statusList.isEmpty()) {
+                throw new OfficeRoomCustomException.InvalidRoomStatusException();
+            }
+
+            return statusList;
+        } catch (OfficeRoomCustomException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new OfficeRoomCustomException.InvalidOfficeRoomDataException();
+        }
     }
 
     @Override
     public List<String> getOfficeRoomTypeList() {
-        List<String> statusList = Stream.of(RoomType.values())
-                .map(Enum::name)
-                .collect(Collectors.toList());
+        try {
+            List<String> typeList = Stream.of(RoomType.values())
+                    .map(Enum::name)
+                    .collect(Collectors.toList());
 
-        return statusList;
+            if (typeList.isEmpty()) {
+                throw new OfficeRoomCustomException.InvalidRoomTypeException();
+            }
+
+            return typeList;
+        } catch (OfficeRoomCustomException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new OfficeRoomCustomException.InvalidOfficeRoomDataException();
+        }
+    }
+
+    private void validateOfficeRoomData(CreateOfficeRoomDto officeRoomDto) {
+        if (officeRoomDto == null) {
+            throw new OfficeRoomCustomException.InvalidOfficeRoomDataException();
+        }
+//        if (officeRoomDto.getCompany() == null || officeRoomDto.getCompany().getId() == null) {
+//            throw new OfficeRoomCustomException.CompanyNotFoundException();
+//        }
+        if (officeRoomDto.getCapacity() <= 0) {
+            throw new OfficeRoomCustomException.InvalidCapacityException();
+        }
+        if (officeRoomDto.getPricePerHour().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new OfficeRoomCustomException.InvalidPriceException();
+        }
+        if (officeRoomDto.getFloor() == null || officeRoomDto.getFloor().trim().isEmpty()) {
+            throw new OfficeRoomCustomException.InvalidFloorException();
+        }
+        if (officeRoomDto.getType() == null) {
+            throw new OfficeRoomCustomException.InvalidRoomTypeException();
+        }
+    }
+
+    private void updateOfficeRoomFields(OfficeRoom existingOfficeRoom, UpdateOfficeRoomRequest officeRoomDto, Company company) {
+        if (officeRoomDto.getCapacity() <= 0) {
+            throw new OfficeRoomCustomException.InvalidCapacityException();
+        }
+        if (officeRoomDto.getPricePerHour().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new OfficeRoomCustomException.InvalidPriceException();
+        }
+
+        existingOfficeRoom.setName(officeRoomDto.getOfficeRoomName());
+        existingOfficeRoom.setAddress(officeRoomDto.getAddress());
+        existingOfficeRoom.setBuilding(officeRoomDto.getBuilding());
+        existingOfficeRoom.setFloor(officeRoomDto.getFloor());
+        existingOfficeRoom.setType(officeRoomDto.getType());
+        existingOfficeRoom.setCapacity(officeRoomDto.getCapacity());
+        existingOfficeRoom.setPictureUrl(officeRoomDto.getPictureUrl());
+        existingOfficeRoom.setPricePerHour(officeRoomDto.getPricePerHour());
+        existingOfficeRoom.setCompany(company);
     }
 
     private OfficeRoomDto mapToDto(OfficeRoom officeRoom) {
         try {
-            OfficeRoomDto dto = modelMapper.map(officeRoom, OfficeRoomDto.class);
-//            dto.setOfficeRoomName(officeRoom.getName());
-//            dto.setId(officeRoom.getId());
-
-            return dto;
+            if (officeRoom == null) {
+                throw new OfficeRoomCustomException.OfficeRoomNotFoundException();
+            }
+            return modelMapper.map(officeRoom, OfficeRoomDto.class);
+        } catch (OfficeRoomCustomException e) {
+            throw e;
         } catch (Exception e) {
-            logger.severe("Error occurred while mapping office room to DTO: " + e.getMessage());
-            throw new RuntimeException("Error mapping office room to DTO", e);
+            throw new OfficeRoomCustomException.InvalidOfficeRoomDataException();
         }
     }
 }

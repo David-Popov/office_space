@@ -37,10 +37,7 @@ public class User implements UserDetails {
     private String pictureUrl;
 
     @ManyToOne
-    @JoinColumn(
-            nullable = false,
-            name = "roleId"
-    )
+    @JoinColumn(nullable = false, name = "roleId")
     private Role role;
 
     @Column(nullable = true)
@@ -64,7 +61,7 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Reservation> reservations;
 
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<Payment> payments;
 
     @Override
