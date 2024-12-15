@@ -1,11 +1,10 @@
 package javawizzards.officespace.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.validation.Valid;
 import javawizzards.officespace.dto.Request.Request;
 import javawizzards.officespace.dto.Response.Response;
 import javawizzards.officespace.dto.User.*;
-import javawizzards.officespace.entity.RequestAndResponse;
 import javawizzards.officespace.enumerations.User.UserMessages;
 import javawizzards.officespace.service.Email.EmailService;
 import javawizzards.officespace.service.RequestAndResponse.RequestAndResponseService;
@@ -65,7 +64,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/google-register")
-    public ResponseEntity<Response<String>> registerGoogleUser(@RequestBody Request<RegisterGoogleUserDto> request, BindingResult bindingResult) throws JsonProcessingException {
+    public ResponseEntity<Response<String>> registerGoogleUser(@RequestBody @Valid Request<RegisterGoogleUserDto> request, BindingResult bindingResult) throws JsonProcessingException {
         Response<String> response;
 
         if (bindingResult.hasErrors()) {
@@ -93,7 +92,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Response<?>> loginUser(@RequestBody Request<LoginUserDto> request, BindingResult bindingResult) throws JsonProcessingException {
+    public ResponseEntity<Response<?>> loginUser(@RequestBody @Valid Request<LoginUserDto> request, BindingResult bindingResult) throws JsonProcessingException {
         Response<LoginResponse> response;
 
         if (bindingResult.hasErrors()) {
@@ -121,7 +120,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/refresh-token")
-    public ResponseEntity<Response<?>> refreshToken(@RequestBody Request<RefreshTokenRequest> request, BindingResult bindingResult) throws JsonProcessingException {
+    public ResponseEntity<Response<?>> refreshToken(@RequestBody @Valid Request<RefreshTokenRequest> request, BindingResult bindingResult) throws JsonProcessingException {
         Response<?> response;
 
         if (bindingResult.hasErrors()) {
@@ -150,7 +149,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/google-login")
-    public ResponseEntity<Response<String>> loginGoogleUser(@RequestBody Request<LoginGoogleUserDto> loginUserDto, BindingResult bindingResult) throws JsonProcessingException {
+    public ResponseEntity<Response<String>> loginGoogleUser(@RequestBody @Valid Request<LoginGoogleUserDto> loginUserDto, BindingResult bindingResult) throws JsonProcessingException {
         Response<String> response;
 
         if (bindingResult.hasErrors()) {
@@ -185,7 +184,7 @@ public class AuthenticationController {
     }
 
     @PutMapping("/change-password")
-    public ResponseEntity<Response<?>> changePassword(@RequestBody Request<ChangeUserPasswordDto> request, BindingResult bindingResult) throws JsonProcessingException {
+    public ResponseEntity<Response<?>> changePassword(@RequestBody @Valid Request<ChangeUserPasswordDto> request, BindingResult bindingResult) throws JsonProcessingException {
         Response<?> response;
 
         if (bindingResult.hasErrors()) {

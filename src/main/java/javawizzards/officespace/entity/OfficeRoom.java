@@ -28,6 +28,7 @@ public class OfficeRoom {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @NotNull
     @Column(nullable = false)
     private String name;
 
@@ -37,13 +38,17 @@ public class OfficeRoom {
     @Column(nullable = true)
     private String building;
 
+    @NotNull
     @Column(nullable = false)
     private String floor;
 
+    @NotNull
     @Enumerated(EnumType.STRING)
     @Column(nullable = true)
     private RoomType type;
 
+    @NotNull
+    @PositiveOrZero
     @Column(nullable = false)
     private int capacity;
 
@@ -51,7 +56,7 @@ public class OfficeRoom {
     @Column(nullable = false)
     private RoomStatus status;
 
-    @Column(nullable = true)
+    @Column(length = 1000)
     private String pictureUrl;
 
     @NotNull

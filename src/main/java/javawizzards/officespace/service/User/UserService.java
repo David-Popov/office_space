@@ -19,7 +19,7 @@ public interface UserService {
     LoginResponse loginUser(LoginUserDto userDto);
     LoginResponse checkIfRefreshTokenIsValidAndGenerateNewTokens(String email, String refreshToken);
     String loginGoogleUser(LoginGoogleUserDto userDto);
-    UserDto updateUser(UserDto userDto);
+    UserDto updateUser(UUID userId, UpdateUserRequest userRequest);
     GoogleUserDto updateGoogleUser(GoogleUserDto userDto);
     void updatePassword(ChangeUserPasswordDto userDto);
     UserDto deleteUser(UUID id);
