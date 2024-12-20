@@ -3,7 +3,6 @@ package javawizzards.officespace.service.OfficeRoom;
 import javawizzards.officespace.dto.OfficeRoom.CreateOfficeRoomDto;
 import javawizzards.officespace.dto.OfficeRoom.OfficeRoomDto;
 import javawizzards.officespace.dto.OfficeRoom.UpdateOfficeRoomRequest;
-import javawizzards.officespace.dto.Resource.ResourceDto;
 
 import java.time.LocalDateTime;
 import java.util.List;

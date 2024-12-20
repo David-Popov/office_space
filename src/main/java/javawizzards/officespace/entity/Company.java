@@ -38,9 +38,5 @@ public class Company {
 
     @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
-    private List<Employee> employees = new ArrayList<>();
-
-    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference
     private List<Department> departments = new ArrayList<>();
 }
