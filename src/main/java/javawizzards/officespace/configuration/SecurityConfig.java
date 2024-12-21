@@ -44,6 +44,7 @@ public class SecurityConfig {
                                 "/notification/**",
                                 "/office-rooms/**",
                                 "/tickets/**",
+                                "/reservations/**",
                                 "/oauth2/**").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()

@@ -37,10 +37,7 @@ public class CreateReservationDto {
     @NotNull(message = "Reservation officeRoomId can't be null")
     @JsonProperty("office_room_uuid")
     private UUID officeRoomId;
-
-    @JsonProperty("participant_uuids")
-    private List<UUID> participantIds;
-
+    
     @Valid
     private EventDto event;
 }

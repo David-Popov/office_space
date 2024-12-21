@@ -75,12 +75,6 @@ public class ReservationServiceImpl implements ReservationService {
             reservation.setOfficeRoom(officeRoom);
             reservation.setDurationAsHours((reservationDto.getDurationAsHours()));
 
-            List<User> participants = reservationDto.getParticipantIds().stream()
-                    .map(userId -> userRepository.findById(userId)
-                            .orElseThrow(() -> new ReservationCustomException.ReservationNotFoundException()))
-                    .collect(Collectors.toList());
-            reservation.setParticipants(participants);
-
             if (reservationDto.getEvent() != null) {
                 Event event = new Event();
                 event.setMeetingTitle(reservationDto.getEvent().getMeetingTitle());
@@ -163,12 +157,6 @@ public class ReservationServiceImpl implements ReservationService {
                         .orElseThrow(() -> new ReservationCustomException.ReservationNotFoundException());
                 existingReservation.setOfficeRoom(officeRoom);
             }
-
-            List<User> updatedParticipants = reservationDto.getParticipants().stream()
-                    .map(participant -> userRepository.findById(participant.getId())
-                            .orElseThrow(() -> new ReservationCustomException.ReservationNotFoundException()))
-                    .collect(Collectors.toList());
-            existingReservation.setParticipants(updatedParticipants);
 
             if (reservationDto.getEvent() != null) {
                 Event event = existingReservation.getEvent();

@@ -49,14 +49,6 @@ public class Reservation {
     @JoinColumn(name = "office_room_uuid", nullable = false)
     private OfficeRoom officeRoom;  
 
-    @ManyToMany
-    @JoinTable(
-        name = "reservation_participants",
-        joinColumns = @JoinColumn(name = "reservation_uuid"),
-        inverseJoinColumns = @JoinColumn(name = "user_uuid")
-    )
-    private List<User> participants = new ArrayList<>();
-
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "event_id", unique = true)
     private Event event;
