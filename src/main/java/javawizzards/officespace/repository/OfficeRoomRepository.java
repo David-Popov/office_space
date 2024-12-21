@@ -22,17 +22,17 @@ public interface OfficeRoomRepository extends JpaRepository<OfficeRoom, UUID> {
     List<OfficeRoom> findByResources(List<Resource> resources);
 
     @Query("SELECT o FROM OfficeRoom o WHERE " +
-            "(:name IS NULL OR o.name = :name) OR " +
-            "(:building IS NULL OR o.building = :building) OR " +
-            "(:floor IS NULL OR o.floor = :floor) OR " +
-            "(:type IS NULL OR o.type = :type) OR " +
-            "(:capacity IS NULL OR o.capacity >= :capacity)")
-    List<OfficeRoom> filterByCriteria(
-            String name,
-            String building,
-            String floor,
-            String type,
-            Integer capacity);
+    "(:name IS NULL OR o.name LIKE %:name%) AND" +
+    "(:building IS NULL OR o.building = :building) AND " +
+    "(:floor IS NULL OR o.floor = :floor) AND " +
+    "(:type IS NULL OR o.type = :type) AND " +
+    "(:capacity IS NULL OR o.capacity >= :capacity)")
+List<OfficeRoom> filterByCriteria(
+    String name,
+    String building,
+    String floor,
+    String type,
+    Integer capacity);
 
     @Query("SELECT o FROM OfficeRoom o WHERE NOT EXISTS (" +
             "SELECT r FROM Reservation r WHERE r.officeRoom.id = o.id " +
@@ -40,4 +40,5 @@ public interface OfficeRoomRepository extends JpaRepository<OfficeRoom, UUID> {
     List<OfficeRoom> findAvailableRooms(
             LocalDateTime startDateTime, 
             LocalDateTime endDateTime);
+
 }

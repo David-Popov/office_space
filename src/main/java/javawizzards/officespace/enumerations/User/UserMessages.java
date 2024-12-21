@@ -21,7 +21,9 @@ public enum UserMessages {
     REGISTER_SUCCESS("User registered successfully"),
     PASSWORD_CHANGED_SUCCESS("Password was changed successfully"),
     USER_UPDATE_SUCCESS("User was updated successfully"),
-    REFRESH_TOKEN_SUCCESS("User refresh token successfully"),;
+    REFRESH_TOKEN_SUCCESS("User refresh token successfully"),
+    INVALID_EMAIL("Invalid email."),
+    USER_FETCH_SUCCESS("User fetched successfully.");
 
     private final String message;
 

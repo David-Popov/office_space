@@ -51,9 +51,6 @@ public class ReservationDto {
     @JsonProperty("office_room_uuid")
     private UUID officeRoomId;
 
-    @JsonProperty("participants")
-    private List<UserDto> participants;
-
     @Valid
     private EventDto event;
 }
