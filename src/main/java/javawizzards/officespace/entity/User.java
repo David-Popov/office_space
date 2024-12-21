@@ -9,7 +9,9 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -37,10 +39,7 @@ public class User implements UserDetails {
     private String pictureUrl;
 
     @ManyToOne
-    @JoinColumn(
-            nullable = false,
-            name = "roleId"
-    )
+    @JoinColumn(nullable = false, name = "roleId")
     private Role role;
 
     @Column(nullable = true)
@@ -64,8 +63,15 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Reservation> reservations;
 
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<Payment> payments;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Ticket> tickets;
+
+    @ManyToMany(mappedBy = "users", fetch = FetchType.LAZY)
+    private Set<Notification> notifications = new HashSet<>();
+
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -91,4 +97,8 @@ public class User implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
+
+    @ManyToOne
+    @JoinColumn(name = "department_uuid")
+    private Department department;
 }

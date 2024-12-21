@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotNull;
+import javawizzards.officespace.enumerations.Department.DepartmentType;
 
 import java.io.Serializable;
 
@@ -17,4 +18,9 @@ public class DepartmentDto implements Serializable {
     @NotNull(message = "Company name can't be null")
     @JsonProperty("company_name")
     private String companyName;
+
+    @NotNull(message = "DepartmentType can't be null")
+    @JsonProperty("departmentType")
+    private DepartmentType departmentType;
+
 }

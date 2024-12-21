@@ -1,11 +1,9 @@
 package javawizzards.officespace.repository;
 
 import javawizzards.officespace.entity.OfficeRoom;
-import javawizzards.officespace.entity.User;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
 import com.nimbusds.jose.util.Resource;
 
@@ -15,7 +13,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface OfficeRoomRepository extends JpaRepository<OfficeRoom, UUID> {
-    Optional<OfficeRoom> findById(UUID id);
     List<OfficeRoom> findByStatus(String status);
     Optional<OfficeRoom> findByName(String name);
     List<OfficeRoom> findByCompanyName(String companyName);
@@ -43,5 +40,4 @@ public interface OfficeRoomRepository extends JpaRepository<OfficeRoom, UUID> {
     List<OfficeRoom> findAvailableRooms(
             LocalDateTime startDateTime, 
             LocalDateTime endDateTime);
-
 }

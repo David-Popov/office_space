@@ -2,12 +2,12 @@ package javawizzards.officespace.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
+import javawizzards.officespace.enumerations.Department.DepartmentType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -23,6 +23,10 @@ public class Department {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @Enumerated(EnumType.STRING)
+    @Column( nullable = false)
+    private DepartmentType departmentType;
+
     @Column(nullable = false)
     private String name;
 
@@ -31,7 +35,14 @@ public class Department {
     @JsonBackReference
     private Company company;
 
-    @OneToMany(mappedBy = "department", cascade = CascadeType.ALL)
+    //from old Logic
+    /*@OneToMany(mappedBy = "department", cascade = CascadeType.ALL)
     @JsonBackReference
-    private List<Employee> employees = new ArrayList<>();
+    private List<Employee> employees = new ArrayList<>();*/
+
+    @OneToMany(mappedBy = "department", fetch = FetchType.LAZY)
+    private List<User> users;
+
+
+
 }

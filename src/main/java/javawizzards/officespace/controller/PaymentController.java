@@ -57,13 +57,13 @@ public class PaymentController {
             response = new Response<>(e.getMessage());
             return ResponseEntity.badRequest().body(response);}
         catch (Exception e) {
-            response =new Response<>(null, HttpStatus.INTERNAL_SERVER_ERROR, PaymentMessages.UNEXPECTED_ERROR.getMessage());
+            response = new Response<>(null, HttpStatus.INTERNAL_SERVER_ERROR, PaymentMessages.UNEXPECTED_ERROR.getMessage());
             return ResponseEntity.internalServerError().body(response);
         }
     }
 
     @PostMapping("/confirm")
-    public ResponseEntity<Response<?>> confirmPayment(@Valid @RequestBody Request<ConfirmPaymentRequest> request, BindingResult bindingResult) {
+    public ResponseEntity<Response<?>> confirmPayment(@RequestBody @Valid Request<ConfirmPaymentRequest> request, BindingResult bindingResult) {
         Response<?> response = null;
 
         try{

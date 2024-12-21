@@ -3,11 +3,13 @@ package javawizzards.officespace.service.Resource;
 import javawizzards.officespace.dto.Resource.ResourceDto;
 import javawizzards.officespace.entity.Resource;
 import javawizzards.officespace.entity.OfficeRoom;
+import javawizzards.officespace.enumerations.Resource.ResourceStatus;
 import javawizzards.officespace.exception.Resource.ResourceCustomException;
 import javawizzards.officespace.repository.ResourceRepository;
 import javawizzards.officespace.repository.OfficeRoomRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
@@ -20,84 +22,105 @@ public class ResourceServiceImpl implements ResourceService {
     private final OfficeRoomRepository officeRoomRepository;
     private final ModelMapper modelMapper;
 
-    public ResourceServiceImpl(ResourceRepository resourceRepository, OfficeRoomRepository officeRoomRepository, ModelMapper modelMapper) {
+    public ResourceServiceImpl(ResourceRepository resourceRepository,
+                               OfficeRoomRepository officeRoomRepository,
+                               ModelMapper modelMapper) {
         this.resourceRepository = resourceRepository;
         this.officeRoomRepository = officeRoomRepository;
         this.modelMapper = modelMapper;
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ResourceDto findResourceById(UUID id) {
-        try {
-            Resource resource = resourceRepository.findById(id)
-                    .orElseThrow(ResourceCustomException.ResourceNotFoundException::new);
-            return mapToDto(resource);
-        } catch (Exception e) {
-            throw new RuntimeException("Error finding resource by ID", e);
-        }
+        Resource resource = resourceRepository.findById(id)
+                .orElseThrow(ResourceCustomException.ResourceNotFoundException::new);
+        return mapToDto(resource);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ResourceDto> findResourcesByOfficeRoomId(UUID officeRoomId) {
-        try {
-            List<Resource> resources = resourceRepository.findByOfficeRoomId(officeRoomId);
-            if (resources.isEmpty()) {
-                throw new ResourceCustomException.ResourceNotFoundException();
-            }
-            return resources.stream().map(this::mapToDto).collect(Collectors.toList());
-        } catch (Exception e) {
-            throw new RuntimeException("Error finding resources by office room ID", e);
+        List<Resource> resources = resourceRepository.findByOfficeRoomId(officeRoomId);
+        if (resources.isEmpty()) {
+            throw new ResourceCustomException.ResourceNotFoundException();
         }
+        return resources.stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public ResourceDto createResource(ResourceDto resourceDto) {
-        try {
-            if (resourceRepository.findByType(resourceDto.getType()).isPresent()) {
+    @Transactional
+    public ResourceDto createResource(UUID officeRoomId, ResourceDto resourceDto) {
+        OfficeRoom officeRoom = officeRoomRepository.findById(officeRoomId)
+                .orElseThrow(() -> new ResourceCustomException.OfficeRoomNotFoundException());
+
+        if (resourceRepository.existsByNameAndTypeAndOfficeRoomId(
+                resourceDto.getName(), resourceDto.getType().toString(), officeRoomId)) {
+            throw new ResourceCustomException.ResourceAlreadyExistsException();
+        }
+
+        Resource resource = new Resource();
+        updateResourceFromDto(resource, resourceDto);
+        resource.setOfficeRoom(officeRoom);
+        resource.setStatus(ResourceStatus.AVAILABLE);
+
+        return mapToDto(resourceRepository.save(resource));
+    }
+
+    @Override
+    @Transactional
+    public ResourceDto updateResource(UUID id, ResourceDto resourceDto) {
+        Resource resource = resourceRepository.findById(id)
+                .orElseThrow(ResourceCustomException.ResourceNotFoundException::new);
+
+        if (!resource.getName().equals(resourceDto.getName()) ||
+                !resource.getType().equals(resourceDto.getType())) {
+            if (resourceRepository.existsByNameAndTypeAndOfficeRoomId(
+                    resourceDto.getName(),
+                    resourceDto.getType().toString(),
+                    resource.getOfficeRoom().getId())) {
                 throw new ResourceCustomException.ResourceAlreadyExistsException();
             }
-
-            OfficeRoom officeRoom = officeRoomRepository.findById(resourceDto.getOfficeRoomId())
-                    .orElseThrow(() -> new RuntimeException("Office Room not found"));
-
-            Resource resource = new Resource();
-            resource.setName(resourceDto.getName());
-            resource.setType(resourceDto.getType());
-            resource.setQuantity(resourceDto.getQuantity());
-            resource.setOfficeRoom(officeRoom);
-
-            resourceRepository.save(resource);
-            return mapToDto(resource);
-        } catch (Exception e) {
-            throw new RuntimeException("Error creating resource", e);
         }
+
+        updateResourceFromDto(resource, resourceDto);
+        return mapToDto(resourceRepository.save(resource));
     }
 
     @Override
-    public ResourceDto updateResource(UUID id, ResourceDto resourceDto) {
-        try {
-            Resource resource = resourceRepository.findById(id)
-                    .orElseThrow(ResourceCustomException.ResourceNotFoundException::new);
-
-            resource.setName(resourceDto.getName());
-            resource.setType(resourceDto.getType());
-            resource.setQuantity(resourceDto.getQuantity());
-
-            resourceRepository.save(resource);
-            return mapToDto(resource);
-        } catch (Exception e) {
-            throw new RuntimeException("Error updating resource", e);
-        }
-    }
-
-    @Override
+    @Transactional
     public void deleteResource(UUID id) {
-        try {
-            Resource resource = resourceRepository.findById(id)
-                    .orElseThrow(ResourceCustomException.ResourceNotFoundException::new);
-            resourceRepository.delete(resource);
-        } catch (Exception e) {
-            throw new RuntimeException("Error deleting resource", e);
+        Resource resource = resourceRepository.findById(id)
+                .orElseThrow(ResourceCustomException.ResourceNotFoundException::new);
+        resourceRepository.delete(resource);
+    }
+
+    @Override
+    @Transactional
+    public ResourceDto updateResourceStatus(UUID id, ResourceStatus status, String maintenanceNotes) {
+        Resource resource = resourceRepository.findById(id)
+                .orElseThrow(ResourceCustomException.ResourceNotFoundException::new);
+
+        resource.setStatus(status);
+        if (status == ResourceStatus.UNDER_MAINTENANCE) {
+            resource.setMaintenanceNotes(maintenanceNotes);
+        }
+
+        return mapToDto(resourceRepository.save(resource));
+    }
+
+    private void updateResourceFromDto(Resource resource, ResourceDto dto) {
+        resource.setName(dto.getName());
+        resource.setType(dto.getType());
+        resource.setQuantity(dto.getQuantity());
+        resource.setDescription(dto.getDescription());
+        if (dto.getStatus() != null) {
+            resource.setStatus(dto.getStatus());
+        }
+        if (dto.getMaintenanceNotes() != null) {
+            resource.setMaintenanceNotes(dto.getMaintenanceNotes());
         }
     }
 

@@ -9,4 +9,5 @@ import java.util.UUID;
 public interface ResourceRepository extends JpaRepository<Resource, UUID> {
     List<Resource> findByOfficeRoomId(UUID officeRoomId);
     Optional<Resource> findByType(String type);
+    boolean existsByNameAndTypeAndOfficeRoomId(String name, String type, UUID officeRoomId);
 }

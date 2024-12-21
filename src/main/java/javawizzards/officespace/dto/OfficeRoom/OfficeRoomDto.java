@@ -4,7 +4,6 @@ import jakarta.validation.constraints.PositiveOrZero;
 import javawizzards.officespace.dto.Company.CompanyDto;
 import javawizzards.officespace.dto.Reservation.ReservationDto;
 import javawizzards.officespace.dto.Resource.ResourceDto;
-import javawizzards.officespace.entity.OfficeRoom;
 import javawizzards.officespace.enumerations.OfficeRoom.RoomStatus;
 import javawizzards.officespace.enumerations.OfficeRoom.RoomType;
 import lombok.AllArgsConstructor;
@@ -47,7 +46,7 @@ public class OfficeRoomDto{
 
     @NotNull(message = "OfficeRoom capacity can't be null")
     @JsonProperty("capacity")
-    private Integer capacity;
+    private int capacity;
 
     @NotNull(message = "OfficeRoom status can't be null")
     @JsonProperty("status")

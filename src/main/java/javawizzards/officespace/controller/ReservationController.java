@@ -1,11 +1,13 @@
 package javawizzards.officespace.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import jakarta.validation.Valid;
 import javawizzards.officespace.dto.Reservation.CreateReservationDto;
 import javawizzards.officespace.dto.Response.Response;
 import javawizzards.officespace.enumerations.Reservation.ReservationMessages;
 import javawizzards.officespace.dto.Request.Request;
 import javawizzards.officespace.dto.Reservation.ReservationDto;
+import javawizzards.officespace.exception.Reservation.ReservationCustomException;
 import javawizzards.officespace.service.Reservation.ReservationService;
 import javawizzards.officespace.service.RequestAndResponse.RequestAndResponseService;
 import javawizzards.officespace.utility.LoggingUtils;
@@ -32,70 +34,7 @@ public class ReservationController {
 
     @PostMapping("/create")
     public ResponseEntity<Response<String>> createReservation(
-        @RequestBody Request<CreateReservationDto> request,
-        BindingResult bindingResult) throws JsonProcessingException {
-        // 1) Валидиране на заявката 
-        //->проверява се за грешки в данните, подадени в заявката
-        if (bindingResult.hasErrors()) {
-            String errorMessage = Objects.requireNonNull(bindingResult.getFieldError()).getDefaultMessage();
-            return ResponseEntity.badRequest().body(new Response<>(errorMessage));
-        }
-    
-        try {
-            //2) Създаване на резервацията чрез reservatioService
-            //->извиква се методът за създаване на резервация с подадените данни
-            ReservationDto createdReservation = reservationService.createReservation(request.getData());
-    
-            //3) Проверка дали създаването на резервацията е успешно
-            Response<String> response;
-            if (createdReservation == null) {
-                response = new Response<>(ReservationMessages.RESERVATION_FAILED.getMessage());
-                this.requestAndResponseService.CreateRequestAndResponse(request, response, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
-                return ResponseEntity.badRequest().body(response);  
-            }
-    
-            //4) Връщане на успешния отговор със съответния статус и съобщение
-            response = new Response<>(HttpStatus.CREATED, ReservationMessages.RESERVATION_SUCCESS.getMessage());
-            this.requestAndResponseService.CreateRequestAndResponse(request, response, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
-    
-            return ResponseEntity.ok(response);
-    
-        } catch (Exception e) {
-            Response<String> errorResponse = new Response<>(e.getMessage());
-            this.requestAndResponseService.CreateRequestAndResponse(request, errorResponse, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
-            return ResponseEntity.internalServerError().body(errorResponse);
-        }
-    }
-    
-    @DeleteMapping("/delete/{id}")
-    public ResponseEntity<Response<Void>> deleteReservation(
-            @PathVariable UUID id) throws JsonProcessingException{
-        try {
-            reservationService.deleteReservation(id);
-            Response<Void> response = new Response<>(null, HttpStatus.NO_CONTENT, "Reservation deleted successfully");
-
-            Request<UUID> request = new Request<>();
-            request.setRequestId(UUID.randomUUID().toString());
-            request.setData(id);
-
-            requestAndResponseService.CreateRequestAndResponse(request, response, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(response);
-        } catch (Exception e) {
-            Response<Void> errorResponse = new Response<>(e.getMessage());
-
-            Request<UUID> request = new Request<>();
-            request.setRequestId(UUID.randomUUID().toString());
-            request.setData(id);
-
-            requestAndResponseService.CreateRequestAndResponse(request, errorResponse, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
-            return ResponseEntity.internalServerError().body(errorResponse);
-        }
-    }
-    
-    @PutMapping("/update/{id}")
-    public ResponseEntity<Response<ReservationDto>> updateReservation(
-            @PathVariable UUID id,
-            @RequestBody ReservationDto reservationDto,
+            @RequestBody @Valid Request<CreateReservationDto> request,
             BindingResult bindingResult) throws JsonProcessingException {
 
         if (bindingResult.hasErrors()) {
@@ -104,22 +43,80 @@ public class ReservationController {
         }
 
         try {
+            ReservationDto createdReservation = reservationService.createReservation(request.getData());
+
+            Response<String> response;
+            if (createdReservation == null) {
+                response = new Response<>(ReservationMessages.RESERVATION_FAILED.getMessage());
+                this.requestAndResponseService.CreateRequestAndResponse(request, response, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            response = new Response<>(HttpStatus.CREATED, ReservationMessages.RESERVATION_SUCCESS.getMessage());
+            this.requestAndResponseService.CreateRequestAndResponse(request, response, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
+            return ResponseEntity.ok(response);
+
+        } catch (ReservationCustomException e) {
+            Response<String> errorResponse = new Response<>(e.getMessage());
+            this.requestAndResponseService.CreateRequestAndResponse(request, errorResponse, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
+            return ResponseEntity.badRequest().body(errorResponse);
+        } catch (Exception e) {
+            Response<String> errorResponse = new Response<>(e.getMessage());
+            this.requestAndResponseService.CreateRequestAndResponse(request, errorResponse, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
+            return ResponseEntity.internalServerError().body(errorResponse);
+        }
+    }
+
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<Response<Void>> deleteReservation(
+            @PathVariable UUID id) throws JsonProcessingException {
+
+        Request<UUID> request = new Request<>();
+        request.setRequestId(UUID.randomUUID().toString());
+        request.setData(id);
+
+        try {
+            reservationService.deleteReservation(id);
+            Response<Void> response = new Response<>(null, HttpStatus.NO_CONTENT, ReservationMessages.RESERVATION_DELETE_SUCCESS.getMessage());
+            requestAndResponseService.CreateRequestAndResponse(request, response, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(response);
+        } catch (ReservationCustomException e) {
+            Response<Void> errorResponse = new Response<>(e.getMessage());
+            requestAndResponseService.CreateRequestAndResponse(request, errorResponse, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
+            return ResponseEntity.badRequest().body(errorResponse);
+        } catch (Exception e) {
+            Response<Void> errorResponse = new Response<>(e.getMessage());
+            requestAndResponseService.CreateRequestAndResponse(request, errorResponse, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
+            return ResponseEntity.internalServerError().body(errorResponse);
+        }
+    }
+
+    @PutMapping("/update/{id}")
+    public ResponseEntity<Response<ReservationDto>> updateReservation(
+            @PathVariable UUID id,
+            @RequestBody @Valid ReservationDto reservationDto,
+            BindingResult bindingResult) throws JsonProcessingException {
+
+        Request<ReservationDto> request = new Request<>();
+        request.setRequestId(UUID.randomUUID().toString());
+        request.setData(reservationDto);
+
+        if (bindingResult.hasErrors()) {
+            String errorMessage = Objects.requireNonNull(bindingResult.getFieldError()).getDefaultMessage();
+            return ResponseEntity.badRequest().body(new Response<>(errorMessage));
+        }
+
+        try {
             ReservationDto updatedReservation = reservationService.updateReservation(id, reservationDto);
-            Response<ReservationDto> response = new Response<>(updatedReservation, HttpStatus.OK, "Reservation updated successfully");
-
-            Request<ReservationDto> request = new Request<>();
-            request.setRequestId(UUID.randomUUID().toString());
-            request.setData(reservationDto);
-
+            Response<ReservationDto> response = new Response<>(updatedReservation, HttpStatus.OK, ReservationMessages.RESERVATION_UPDATE_SUCCESS.getMessage());
             requestAndResponseService.CreateRequestAndResponse(request, response, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
             return ResponseEntity.ok(response);
+        } catch (ReservationCustomException e) {
+            Response<ReservationDto> errorResponse = new Response<>(e.getMessage());
+            requestAndResponseService.CreateRequestAndResponse(request, errorResponse, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
+            return ResponseEntity.badRequest().body(errorResponse);
         } catch (Exception e) {
             Response<ReservationDto> errorResponse = new Response<>(e.getMessage());
-
-            Request<ReservationDto> request = new Request<>();
-            request.setRequestId(UUID.randomUUID().toString());
-            request.setData(reservationDto);
-
             requestAndResponseService.CreateRequestAndResponse(request, errorResponse, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
             return ResponseEntity.internalServerError().body(errorResponse);
         }
@@ -127,24 +124,23 @@ public class ReservationController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Response<ReservationDto>> getReservationById(
-            @PathVariable UUID id) throws JsonProcessingException{
+            @PathVariable UUID id) throws JsonProcessingException {
+
+        Request<UUID> request = new Request<>();
+        request.setRequestId(UUID.randomUUID().toString());
+        request.setData(id);
+
         try {
             ReservationDto reservation = reservationService.findReservationById(id);
             Response<ReservationDto> response = new Response<>(reservation, HttpStatus.OK, "Reservation fetched successfully");
-
-            Request<UUID> request = new Request<>();
-            request.setRequestId(UUID.randomUUID().toString());
-            request.setData(id);
-
             requestAndResponseService.CreateRequestAndResponse(request, response, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
             return ResponseEntity.ok(response);
+        } catch (ReservationCustomException e) {
+            Response<ReservationDto> errorResponse = new Response<>(e.getMessage());
+            requestAndResponseService.CreateRequestAndResponse(request, errorResponse, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
+            return ResponseEntity.badRequest().body(errorResponse);
         } catch (Exception e) {
             Response<ReservationDto> errorResponse = new Response<>(e.getMessage());
-
-            Request<UUID> request = new Request<>();
-            request.setRequestId(UUID.randomUUID().toString());
-            request.setData(id);
-
             requestAndResponseService.CreateRequestAndResponse(request, errorResponse, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
             return ResponseEntity.internalServerError().body(errorResponse);
         }
@@ -152,24 +148,23 @@ public class ReservationController {
 
     @GetMapping("/office-room/{officeRoomId}")
     public ResponseEntity<Response<List<ReservationDto>>> getReservationsByOfficeRoomId(
-            @PathVariable UUID officeRoomId) throws JsonProcessingException{
+            @PathVariable UUID officeRoomId) throws JsonProcessingException {
+
+        Request<UUID> request = new Request<>();
+        request.setRequestId(UUID.randomUUID().toString());
+        request.setData(officeRoomId);
+
         try {
             List<ReservationDto> reservations = reservationService.findReservationsByOfficeRoomId(officeRoomId);
             Response<List<ReservationDto>> response = new Response<>(reservations, HttpStatus.OK, "Reservations fetched successfully");
-
-            Request<UUID> request = new Request<>();
-            request.setRequestId(UUID.randomUUID().toString());
-            request.setData(officeRoomId);
-
             requestAndResponseService.CreateRequestAndResponse(request, response, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
             return ResponseEntity.ok(response);
+        } catch (ReservationCustomException e) {
+            Response<List<ReservationDto>> errorResponse = new Response<>(e.getMessage());
+            requestAndResponseService.CreateRequestAndResponse(request, errorResponse, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
+            return ResponseEntity.badRequest().body(errorResponse);
         } catch (Exception e) {
             Response<List<ReservationDto>> errorResponse = new Response<>(e.getMessage());
-
-            Request<UUID> request = new Request<>();
-            request.setRequestId(UUID.randomUUID().toString());
-            request.setData(officeRoomId);
-
             requestAndResponseService.CreateRequestAndResponse(request, errorResponse, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
             return ResponseEntity.internalServerError().body(errorResponse);
         }
@@ -178,32 +173,45 @@ public class ReservationController {
     @GetMapping("/user/{userId}")
     public ResponseEntity<Response<List<ReservationDto>>> getReservationsByUserId(
             @PathVariable UUID userId) throws JsonProcessingException {
+
+        Request<String> request = new Request<>();
+        request.setRequestId(UUID.randomUUID().toString());
+        request.setData(userId.toString());
+
         try {
             List<ReservationDto> reservations = reservationService.findReservationsByUserId(userId);
-    
             Response<List<ReservationDto>> response = new Response<>(reservations, HttpStatus.OK, "Reservations fetched successfully");
-    
-            Request<String> request = new Request<>();
-            request.setRequestId(UUID.randomUUID().toString());
-            request.setData(userId.toString()); 
-    
             requestAndResponseService.CreateRequestAndResponse(request, response, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
             return ResponseEntity.ok(response);
+        } catch (ReservationCustomException e) {
+            Response<List<ReservationDto>> errorResponse = new Response<>(e.getMessage());
+            requestAndResponseService.CreateRequestAndResponse(request, errorResponse, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
+            return ResponseEntity.badRequest().body(errorResponse);
         } catch (Exception e) {
             Response<List<ReservationDto>> errorResponse = new Response<>(e.getMessage());
-    
-            Request<String> request = new Request<>();
-            request.setRequestId(UUID.randomUUID().toString());
-            request.setData(userId.toString()); 
-    
             requestAndResponseService.CreateRequestAndResponse(request, errorResponse, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
             return ResponseEntity.internalServerError().body(errorResponse);
         }
     }
 
     @GetMapping("/get-statuses")
-    public ResponseEntity<List<String>> getOfficeRoomStatuses() {
-        List<String> officeStatuses = this.reservationService.getReservationStatusList();
-        return ResponseEntity.ok(officeStatuses);
+    public ResponseEntity<Response<List<String>>> getOfficeRoomStatuses() throws JsonProcessingException {
+        Request<Void> request = new Request<>();
+        request.setRequestId(UUID.randomUUID().toString());
+
+        try {
+            List<String> statuses = this.reservationService.getReservationStatusList();
+            Response<List<String>> response = new Response<>(statuses, HttpStatus.OK, "Reservation statuses fetched successfully");
+            requestAndResponseService.CreateRequestAndResponse(request, response, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
+            return ResponseEntity.ok(response);
+        } catch (ReservationCustomException e) {
+            Response<List<String>> errorResponse = new Response<>(e.getMessage());
+            requestAndResponseService.CreateRequestAndResponse(request, errorResponse, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
+            return ResponseEntity.badRequest().body(errorResponse);
+        } catch (Exception e) {
+            Response<List<String>> errorResponse = new Response<>(e.getMessage());
+            requestAndResponseService.CreateRequestAndResponse(request, errorResponse, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
+            return ResponseEntity.internalServerError().body(errorResponse);
+        }
     }
 }
