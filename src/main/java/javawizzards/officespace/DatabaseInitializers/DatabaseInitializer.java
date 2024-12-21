@@ -1,6 +1,7 @@
 package javawizzards.officespace.DatabaseInitializers;
 
 import javawizzards.officespace.entity.*;
+import javawizzards.officespace.enumerations.Department.DepartmentType;
 import javawizzards.officespace.enumerations.OfficeRoom.RoomStatus;
 import javawizzards.officespace.enumerations.OfficeRoom.RoomType;
 import javawizzards.officespace.enumerations.Resource.ResourceStatus;
@@ -137,35 +138,39 @@ public class DatabaseInitializer implements CommandLineRunner {
         company.setAddress(address);
         company.setType(type);
         company.setOfficeRooms(new ArrayList<>());
-        company.setEmployees(new ArrayList<>());
         company.setDepartments(new ArrayList<>());
         return company;
     }
 
-    private List<Department> createDepartmentsForCompany(Company company) {
-        List<String> departmentNames = Arrays.asList(
-                "Human Resources",
-                "Finance",
-                "Marketing",
-                "Operations",
-                "IT",
-                "Sales",
-                "Research & Development"
-        );
+    //TODO
+private List<Department> createDepartmentsForCompany(Company company) {
+    Map<String, DepartmentType> departmentTypes = Map.of(
+            "Human Resources", DepartmentType.HR,
+            "Finance", DepartmentType.FINANCE,
+            "Marketing", DepartmentType.MARKETING,
+            "DevOps", DepartmentType.DEVOPS,
+            "IT", DepartmentType.IT_SUPPORT,
+            "Sales", DepartmentType.SALES,
+            "Research & Development", DepartmentType.RESEARCH_AND_DEVELOPMENT,
+            "IT Suport", DepartmentType.IT_SUPPORT
+    );
 
-        List<Department> departments = new ArrayList<>();
+    List<Department> departments = new ArrayList<>();
 
-        int numDepartments = 3 + (int)(Math.random() * 3);
-        for (int i = 0; i < numDepartments; i++) {
-            Department department = new Department();
-            department.setName(departmentNames.get(i));
-            department.setCompany(company);
-            department.setEmployees(new ArrayList<>());
-            departments.add(department);
-        }
+    int numDepartments = 3 + (int)(Math.random() * 3);
 
-        return departments;
+    List<String> departmentNames = new ArrayList<>(departmentTypes.keySet());
+    for (int i = 0; i < numDepartments; i++) {
+        String departmentName = departmentNames.get(i);
+        Department department = new Department();
+        department.setName(departmentName);
+        department.setDepartmentType(departmentTypes.get(departmentName)); 
+        department.setCompany(company);
+        departments.add(department);
     }
+
+    return departments;
+}
 
     private List<OfficeRoom> createOfficeRoomsForCompany(Company company) {
         List<OfficeRoom> officeRooms = new ArrayList<>();
