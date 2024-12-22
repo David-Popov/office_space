@@ -43,7 +43,4 @@ public class TicketDto {
     @NotNull(message = "TicketDate can't be null")
     @JsonProperty("ticketDate")
     private LocalDateTime ticketDate;
-
-    @JsonProperty("department_uuid")
-    private UUID departmentId;
 }

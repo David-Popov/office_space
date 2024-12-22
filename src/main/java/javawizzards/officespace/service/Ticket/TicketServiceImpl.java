@@ -14,6 +14,7 @@ import javawizzards.officespace.repository.DepartmentRepository;
 import javawizzards.officespace.repository.TicketRepository;
 import javawizzards.officespace.repository.OfficeRoomRepository;
 import javawizzards.officespace.repository.UserRepository;
+import javawizzards.officespace.exception.OfficeRoom.OfficeRoomCustomException;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,7 +52,6 @@ public class TicketServiceImpl implements TicketService {
             @Override
             protected void configure() {
                 map(source.getUser().getId(), destination.getUserId());
-                map(source.getDepartment().getId(), destination.getDepartmentId());
                 map(source.getOfficeRoom().getId(), destination.getOfficeRoomId());
             }
         });
@@ -71,9 +71,14 @@ public class TicketServiceImpl implements TicketService {
                 .orElseThrow(() -> new TicketCustomException.TicketUserNotFoundException());
 
         OfficeRoom officeRoom = officeRoomRepository.findById(ticketDto.getOfficeRoomId())
-                .orElseThrow(() -> new RuntimeException("OfficeRoom not found for ID: " + ticketDto.getOfficeRoomId()));
+                .orElseThrow(() -> new OfficeRoomCustomException.OfficeRoomNotFoundException());
 
-        Department department = departmentRepository.findById(findDepartmentByTicketType(ticketDto.getTicketType()))
+        UUID departmentId = findDepartmentByTicketTypeAndCompanyId(
+                ticketDto.getTicketType(),
+                officeRoom.getCompany().getId()
+        );
+
+        Department department = departmentRepository.findById(departmentId)
                 .orElseThrow(() -> new DepartmentCustomException.DepartmentNotFoundException());
 
         Ticket ticket = new Ticket();
@@ -88,6 +93,18 @@ public class TicketServiceImpl implements TicketService {
 
         Ticket savedTicket = ticketRepository.save(ticket);
         return mapToDto(savedTicket);
+    }
+
+    public UUID findDepartmentByTicketTypeAndCompanyId(TicketType ticketType, UUID companyId) {
+
+        DepartmentType departmentType = mapTicketTypeToDepartment(ticketType);
+        System.out.println("Department Type: " + departmentType); 
+        System.out.println("Company ID: " + companyId);
+    
+        Department department = departmentRepository.findByDepartmentTypeAndCompanyId(departmentType, companyId)
+                .orElseThrow(() -> new DepartmentCustomException.DepartmentNotFoundException());
+    
+        return department.getId(); 
     }
 
     public UUID findDepartmentByTicketType(TicketType type) {
@@ -140,9 +157,22 @@ public class TicketServiceImpl implements TicketService {
                 .toList();
     }
 
+    private DepartmentType mapTicketTypeToDepartment(TicketType ticketType) {
+        switch (ticketType) {
+            case IT:
+                return DepartmentType.IT_SUPPORT;
+            case MAINTENANCE:
+                return DepartmentType.MAINTENANCE;
+            case CLEANING:
+                return DepartmentType.CLEANING;
+            default:
+                return DepartmentType.GENERAL;
+        }
+    }
+
     private TicketDto mapToDto(Ticket ticket) {
         if (ticket == null) {
-            throw new TicketCustomException.TicketNotFoundException();
+            return null; 
         }
         return modelMapper.map(ticket, TicketDto.class);
     }
