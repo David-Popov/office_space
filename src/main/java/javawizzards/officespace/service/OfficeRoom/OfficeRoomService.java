@@ -4,6 +4,7 @@ import javawizzards.officespace.dto.OfficeRoom.CreateOfficeRoomDto;
 import javawizzards.officespace.dto.OfficeRoom.OfficeRoomDto;
 import javawizzards.officespace.dto.OfficeRoom.UpdateOfficeRoomRequest;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -19,7 +20,7 @@ public interface OfficeRoomService {
     List<OfficeRoomDto> findOfficeRoomsByCapacity(int capacity);
     List<OfficeRoomDto> findOfficeRoomsByFloor(String floor);
     List<OfficeRoomDto> findOfficeRoomsByType(String type);
-    List<OfficeRoomDto> filterOfficeRooms(String name, String building, String floor, String type, Integer capacity);
+    List<OfficeRoomDto> filterOfficeRooms(String name, String building, String floor, String type, Integer capacity, BigDecimal minPrice, BigDecimal maxPrice);
     List<OfficeRoomDto> findAvailableRooms(LocalDateTime startDateTime, LocalDateTime endDateTime);
     List<String> getOfficeRoomStatusList();
     List<String> getOfficeRoomTypeList();

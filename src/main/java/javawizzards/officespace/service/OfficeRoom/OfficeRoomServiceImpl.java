@@ -267,25 +267,29 @@ public class OfficeRoomServiceImpl implements OfficeRoomService {
             throw new OfficeRoomCustomException.InvalidOfficeRoomDataException();
         }
     }
-
+    
     @Override
-    public List<OfficeRoomDto> filterOfficeRooms(String name, String building, String floor, String type, Integer capacity) {
+    public List<OfficeRoomDto> filterOfficeRooms(String name, String building, String floor, 
+                                                  String type, Integer capacity, 
+                                                  BigDecimal minPrice, BigDecimal maxPrice) {
         try {
-            List<OfficeRoom> officeRooms = officeRoomRepository.filterByCriteria(name, building, floor, type, capacity);
+            List<OfficeRoom> officeRooms = officeRoomRepository.filterByCriteriaWithPriceRange(
+                    name, building, floor, type, capacity, minPrice, maxPrice);
+    
             if (officeRooms.isEmpty()) {
                 throw new OfficeRoomCustomException.OfficeRoomNotFoundException();
             }
-
+    
             return officeRooms.stream()
                     .map(this::mapToDto)
                     .collect(Collectors.toList());
+    
         } catch (OfficeRoomCustomException e) {
             throw e;
         } catch (Exception e) {
             throw new OfficeRoomCustomException.InvalidOfficeRoomDataException();
         }
     }
-
     @Override
     public List<OfficeRoomDto> findAvailableRooms(LocalDateTime startDateTime, LocalDateTime endDateTime) {
         try {
