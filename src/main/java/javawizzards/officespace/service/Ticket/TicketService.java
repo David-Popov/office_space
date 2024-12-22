@@ -14,4 +14,5 @@ public interface TicketService {
     Ticket changeTicketStatus(UUID id, TicketStatus newStatus);
     List<TicketDto> getAllTicketsOfUser(UUID userId);
     UUID findDepartmentByTicketType(TicketType type);
+    UUID findDepartmentByTicketTypeAndCompanyId(TicketType ticketType, UUID companyId);
 }
