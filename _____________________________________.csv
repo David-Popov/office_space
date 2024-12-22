@@ -1,0 +1,9 @@
+Тестови клас,Цел на тестовете,Основни сценарии,Използвани технологии
+ReservationControllerPerformanceTest,Тестване на производителността на API за резервации при високо натоварване и големи заявки.,"Високо натоварване, големи payload-и, бързина на отговор.","MockMvc, Spring Boot Performance Testing"
+ReservationControllerTest,"Тестване на стандартни API операции за резервации – създаване, изтриване, търсене.","POST/GET/DELETE заявки към API, валидиране на структурата на отговорите.","MockMvc, Spring Boot, REST API Testing"
+ReservationControllerEdgeCaseTest,"Тестване на гранични случаи в API за резервации, напр. невалидни входни данни или конфликти.","Обработка на невалидни идентификатори, времеви конфликти при резервации.","MockMvc, Spring Boot, Edge Case Handling"
+ReservationServiceTest,"Тестване на бизнес логика в сервизния слой, напр. създаване, актуализиране и търсене на резервации.","Създаване и актуализация на резервации, взаимодействие с хранилища.","Mockito, Spring Boot, Business Logic Testing"
+TestOnlyRepositoryIntegrationTest,Интеграционни тестове за TestOnlyRepository – проверка на връзката с базата данни.,"Запазване и извличане на обекти, персонализирани заявки.","DataJpaTest, Spring Boot, Database Testing"
+UserRepositoryTest,Юнит тестове за UserRepository – CRUD операции и персонализирани заявки.,"Създаване, намиране по email, изтриване на потребители.","Mockito, JpaRepository, CRUD Testing"
+UtilityTests,"Тестване на помощни функции, като форматиране на дати, валидиране на входни данни и изчисления.","Форматиране на дати, изчисления, валидиране.","JUnit, Utility Function Validation"
+OfficespaceApplicationTests,"Уверяване, че контекстът на Spring приложението се зарежда успешно.",Проверка на зареждането на контекста без грешки.,"Spring Boot, Context Loading"
