@@ -3,11 +3,13 @@ package javawizzards.officespace.controller;
 import javawizzards.officespace.entity.Ticket;
 import javawizzards.officespace.entity.User;
 import javawizzards.officespace.enumerations.Notification.NotificationType;
+import javawizzards.officespace.enumerations.Reservation.ReservationMessages;
 import javawizzards.officespace.enumerations.Ticket.TicketMessages;
 import javawizzards.officespace.enumerations.Ticket.TicketStatus;
 import javawizzards.officespace.dto.Request.Request;
 import javawizzards.officespace.dto.Response.Response;
 import javawizzards.officespace.dto.Ticket.TicketDto;
+import javawizzards.officespace.exception.Reservation.ReservationCustomException;
 import javawizzards.officespace.exception.Ticket.TicketCustomException;
 import javawizzards.officespace.repository.DepartmentRepository;
 import javawizzards.officespace.repository.UserRepository;
@@ -63,20 +65,15 @@ public class TicketController {
         try {
             TicketDto createdTicket = ticketService.createTicket(request.getData());
     
-            List<User> departmentUsers = userRepository.findByDepartment_Id(createdTicket.getDepartmentId());
+            Response<String> response;
 
-            List<UUID> departmentUserIds = departmentUsers.stream()
-                    .map(User::getId)
-                    .collect(Collectors.toList());
-    
-            //TODO
-            notificationService.sendSystemNotification(
-                    "Ticket created: " + createdTicket.getTicketTitle(),
-                    NotificationType.TICKET_CREATED,
-                    departmentUserIds
-            );
-    
-            Response<String> response = new Response<>(HttpStatus.CREATED, TicketMessages.TICKET_CREATION_SUCCESS.getMessage());
+            if (createdTicket == null) {
+                response = new Response<>(TicketMessages.TICKET_CREATION_FAILED.getMessage());
+                this.requestAndResponseService.CreateRequestAndResponse(request, response, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            response = new Response<>(HttpStatus.CREATED, ReservationMessages.RESERVATION_SUCCESS.getMessage());
             this.requestAndResponseService.CreateRequestAndResponse(request, response, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
             return ResponseEntity.ok(response);
     
@@ -92,37 +89,26 @@ public class TicketController {
     }
     
     @PatchMapping("update-status/{id}/status")
-public ResponseEntity<Response<String>> updateTicketStatus(@PathVariable UUID id, @RequestParam TicketStatus newStatus) {
-    try {
-        ticketService.changeTicketStatus(id, newStatus);
+    public ResponseEntity<Response<String>> updateTicketStatus(@PathVariable UUID id, @RequestParam TicketStatus newStatus) {
+        try {
+            if (id.toString().isEmpty() || newStatus.toString().isEmpty() || newStatus == null) {
+                return ResponseEntity.badRequest().body(new Response<>("Id or new status can not be null"));
+            }
 
-        Ticket ticket = ticketService.changeTicketStatus(id, newStatus);
-        User ticketUser = ticket.getUser();
-    
-        //TODO
-        /* if (ticketUser != null) {
-            notificationService.sendSystemNotification(
-                    "Ticket status updated to: " + newStatus,
-                    NotificationType.TICKET_STATUS_CHANGED,
-                    List.of(ticketUser.getId()) 
-            );
-        }*/
+            ticketService.changeTicketStatus(id, newStatus);
 
+            String message = "Ticket status updated successfully to: " + newStatus;
+            Response<String> response = new Response<>(message, HttpStatus.OK, "Operation completed successfully.");
+            return ResponseEntity.ok(response);
 
-        String message = "Ticket status updated successfully to: " + newStatus;
-        Response<String> response = new Response<>(message, HttpStatus.OK, "Operation completed successfully.");
-        return ResponseEntity.ok(response);
-
-    } catch (TicketCustomException e) {
-        return ResponseEntity.badRequest().body(
-            new Response<>("Failed to update ticket status: " + e.getMessage(), HttpStatus.BAD_REQUEST, "Operation failed."));
-    } catch (Exception e) {
-        return ResponseEntity.internalServerError().body(
-            new Response<>("An internal server error occurred: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR, "Operation failed."));
+        } catch (TicketCustomException e) {
+            return ResponseEntity.badRequest().body(
+                new Response<>("Failed to update ticket status: " + e.getMessage(), HttpStatus.BAD_REQUEST, "Operation failed."));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(
+                new Response<>("An internal server error occurred: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR, "Operation failed."));
     }
 }
-
-    
 
     @GetMapping("/all/{userId}")
     public ResponseEntity<Response<List<TicketDto>>> getAllTicketsOfUser(@PathVariable UUID userId) {

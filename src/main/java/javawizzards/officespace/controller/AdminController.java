@@ -108,7 +108,7 @@ public class AdminController {
         try{
             var data = this.userService.getUsers();
             response = new Response<>(data, HttpStatus.OK, UserMessages.USER_UPDATE_SUCCESS.getMessage());
-            this.requestAndResponseService.CreateRequestAndResponse(requestId, response, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
+//            this.requestAndResponseService.CreateRequestAndResponse(requestId, response, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
             return ResponseEntity.ok(response);
 
         } catch (Exception e) {
@@ -117,6 +117,4 @@ public class AdminController {
             return ResponseEntity.internalServerError().body(response);
         }
     }
-
-
 }

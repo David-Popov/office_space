@@ -47,4 +47,10 @@ public abstract class TicketCustomException extends RuntimeException {
             super(TicketMessages.TICKET_USER_NOT_FOUND.getMessage());
         }
     }
+
+    public static class TicketStatusChangeFailure extends TicketCustomException {
+        public TicketStatusChangeFailure() {
+            super(TicketMessages.TICKET_STATUS_CHANGE_FAILURE.getMessage());
+        }
+    }
 }

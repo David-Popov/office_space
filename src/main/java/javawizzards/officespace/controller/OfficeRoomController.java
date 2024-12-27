@@ -1,5 +1,6 @@
 package javawizzards.officespace.controller;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
@@ -160,24 +161,26 @@ public class OfficeRoomController {
         }
     }
 
-    @GetMapping("/filter")
-    public ResponseEntity<Response<List<OfficeRoomDto>>> filterOfficeRooms(
-            @RequestParam(name = "name", required = false) String name,
-            @RequestParam(name = "building", required = false) String building,
-            @RequestParam(name = "floor", required = false) String floor,
-            @RequestParam(name = "type", required = false) String type,
-            @RequestParam(name = "capacity", required = false) Integer capacity) {
-        try {
-            List<OfficeRoomDto> filteredOfficeRooms = officeRoomService.filterOfficeRooms(name, building, floor, type, capacity);
-            Response<List<OfficeRoomDto>> response = new Response<>(filteredOfficeRooms, HttpStatus.OK, OfficeRoomMessages.OFFICE_ROOMS_FETCH_SUCCESS.getMessage());
-            return ResponseEntity.ok(response);
-        } catch (OfficeRoomCustomException e) {
-            return ResponseEntity.badRequest().body(new Response<>(e.getMessage(), HttpStatus.BAD_REQUEST, OfficeRoomMessages.CUSTOM_ERROR.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(new Response<>(e.getMessage()));
-        }
+@GetMapping("/filter")
+public ResponseEntity<Response<List<OfficeRoomDto>>> filterOfficeRooms(
+        @RequestParam(name = "name", required = false) String name,
+        @RequestParam(name = "building", required = false) String building,
+        @RequestParam(name = "floor", required = false) String floor,
+        @RequestParam(name = "type", required = false) String type,
+        @RequestParam(name = "capacity", required = false) Integer capacity,
+        @RequestParam(name = "minPrice", required = false) BigDecimal minPrice,
+        @RequestParam(name = "maxPrice", required = false) BigDecimal maxPrice) {
+    try {
+        List<OfficeRoomDto> filteredOfficeRooms = officeRoomService.filterOfficeRooms(
+                name, building, floor, type, capacity, minPrice, maxPrice);
+        Response<List<OfficeRoomDto>> response = new Response<>(filteredOfficeRooms, HttpStatus.OK, OfficeRoomMessages.OFFICE_ROOMS_FETCH_SUCCESS.getMessage());
+        return ResponseEntity.ok(response);
+    } catch (OfficeRoomCustomException e) {
+        return ResponseEntity.badRequest().body(new Response<>(e.getMessage(), HttpStatus.BAD_REQUEST, OfficeRoomMessages.CUSTOM_ERROR.getMessage()));
+    } catch (Exception e) {
+        return ResponseEntity.internalServerError().body(new Response<>(e.getMessage()));
     }
-
+}
     @GetMapping("/availability")
     public ResponseEntity<Response<List<OfficeRoomDto>>> findAvailableRooms(
             @RequestParam(name = "startDateTime", required = false) LocalDateTime startDateTime,

@@ -2,12 +2,18 @@ package javawizzards.officespace.service.Company;
 
 import javawizzards.officespace.dto.Company.CompanyDto;
 import javawizzards.officespace.entity.Company;
+import javawizzards.officespace.entity.Department;
+import javawizzards.officespace.entity.User;
+import javawizzards.officespace.enumerations.Department.DepartmentType;
 import javawizzards.officespace.exception.Company.CompanyCustomException;
+import javawizzards.officespace.exception.User.UserCustomException;
 import javawizzards.officespace.repository.CompanyRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -41,6 +47,9 @@ public class CompanyServiceImpl implements CompanyService {
     public CompanyDto createCompany(CompanyDto createCompanyDto) {
         try {
             Company company = modelMapper.map(createCompanyDto, Company.class);
+
+            this.createDepartmentsForCompany(company);
+
             Company savedCompany = companyRepository.save(company);
             return mapToDto(savedCompany);
         } catch (Exception e) {
@@ -109,5 +118,33 @@ public class CompanyServiceImpl implements CompanyService {
             logger.severe("Error occurred while mapping company to DTO: " + e.getMessage());
             throw new RuntimeException("Error mapping company to DTO", e);
         }
+    }
+
+    private List<Department> createDepartmentsForCompany(Company company) {
+        Map<String, DepartmentType> departmentTypes = Map.of(
+                "Human Resources", DepartmentType.HR,
+                "Finance", DepartmentType.FINANCE,
+                "Marketing", DepartmentType.MARKETING,
+                "DevOps", DepartmentType.DEVOPS,
+                "IT", DepartmentType.IT_SUPPORT,
+                "Sales", DepartmentType.SALES,
+                "Research & Development", DepartmentType.RESEARCH_AND_DEVELOPMENT,
+                "IT Suport", DepartmentType.IT_SUPPORT
+        );
+
+        List<Department> departments = new ArrayList<>();
+
+        List<String> departmentNames = new ArrayList<>(departmentTypes.keySet());
+        for (int i = 0; i < departmentTypes.size(); i++) {
+            String departmentName = departmentNames.get(i);
+            Department department = new Department();
+            department.setName(departmentName);
+            department.setDepartmentType(departmentTypes.get(departmentName));
+            department.setCompany(company);
+            department.setUsers(new ArrayList<>());
+            departments.add(department);
+        }
+
+        return departments;
     }
 }

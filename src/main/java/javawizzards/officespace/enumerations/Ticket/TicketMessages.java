@@ -10,7 +10,8 @@ public enum TicketMessages {
     TICKET_USER_NOT_FOUND("User not found."),
     TICKET_CREATION_SUCCESS("Ticket created successfully."),
     TICKET_UPDATE_SUCCESS("Ticket updated successfully."),
-    TICKET_STATUS_CHANGE_SUCCESS("Ticket status changed successfully.");
+    TICKET_STATUS_CHANGE_SUCCESS("Ticket status changed successfully."),
+    TICKET_STATUS_CHANGE_FAILURE("Ticket status was not changed successfully.");
 
     private final String message;
 
