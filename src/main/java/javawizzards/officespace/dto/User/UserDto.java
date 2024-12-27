@@ -3,8 +3,11 @@ package javawizzards.officespace.dto.User;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
+import javawizzards.officespace.dto.Notification.SendNotificationDto;
+import javawizzards.officespace.dto.Notification.UserNotificationDto;
 import javawizzards.officespace.dto.Payment.PaymentResponse;
 import javawizzards.officespace.dto.Reservation.ReservationDto;
+import javawizzards.officespace.entity.Notification;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -58,4 +61,8 @@ public class UserDto implements Serializable {
     @NotNull
     @JsonProperty("payments")
     private List<PaymentResponse> payments;
+
+    @NotNull
+    @JsonProperty("notifications")
+    private List<UserNotificationDto> notifications;
 }

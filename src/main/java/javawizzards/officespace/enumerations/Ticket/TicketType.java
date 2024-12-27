@@ -5,5 +5,4 @@ public enum TicketType {
     MAINTENANCE,
     CLEANING,
     OTHER
-    // Add more ticket types here
 }
