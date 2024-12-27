@@ -5,5 +5,4 @@ public enum NotificationType {
     TICKET_STATUS_CHANGED,
     RESERVATION_CREATED,
     GENERAL
-    // Add more notification types here
 }

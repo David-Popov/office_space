@@ -41,6 +41,7 @@ public class CompanyServiceImpl implements CompanyService {
     public CompanyDto createCompany(CompanyDto createCompanyDto) {
         try {
             Company company = modelMapper.map(createCompanyDto, Company.class);
+
             Company savedCompany = companyRepository.save(company);
             return mapToDto(savedCompany);
         } catch (Exception e) {

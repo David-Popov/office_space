@@ -35,11 +35,6 @@ public class Department {
     @JsonBackReference
     private Company company;
 
-    //from old Logic
-    /*@OneToMany(mappedBy = "department", cascade = CascadeType.ALL)
-    @JsonBackReference
-    private List<Employee> employees = new ArrayList<>();*/
-
     @OneToMany(mappedBy = "department", fetch = FetchType.LAZY)
     private List<User> users;
 

@@ -7,6 +7,7 @@ import javawizzards.officespace.enumerations.OfficeRoom.RoomType;
 import javawizzards.officespace.enumerations.Resource.ResourceStatus;
 import javawizzards.officespace.enumerations.Resource.ResourceType;
 import javawizzards.officespace.enumerations.User.RoleEnum;
+import javawizzards.officespace.exception.User.UserCustomException;
 import javawizzards.officespace.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
@@ -157,6 +158,9 @@ private List<Department> createDepartmentsForCompany(Company company) {
 
     List<Department> departments = new ArrayList<>();
 
+    User user = this.userRepository.findByEmail("user@gmail.com").orElseThrow(() -> new UserCustomException.UserNotFoundException());
+    List<User> departmentUsers = new ArrayList<>();
+    departmentUsers.add(user);
     int numDepartments = 3 + (int)(Math.random() * 3);
 
     List<String> departmentNames = new ArrayList<>(departmentTypes.keySet());
@@ -166,6 +170,7 @@ private List<Department> createDepartmentsForCompany(Company company) {
         department.setName(departmentName);
         department.setDepartmentType(departmentTypes.get(departmentName)); 
         department.setCompany(company);
+        department.setUsers(departmentUsers);
         departments.add(department);
     }
 
