@@ -1,6 +1,7 @@
 package javawizzards.officespace.service.Company;
 
 import javawizzards.officespace.dto.Company.CompanyDto;
+import javawizzards.officespace.dto.Company.UpdateCompanyRequest;
 import javawizzards.officespace.entity.Company;
 import javawizzards.officespace.entity.Department;
 import javawizzards.officespace.entity.User;
@@ -44,6 +45,18 @@ public class CompanyServiceImpl implements CompanyService {
     }
 
     @Override
+    public CompanyDto findCompanyById(UUID id) {
+        try {
+            Company company = companyRepository.findById(id)
+                    .orElseThrow(CompanyCustomException.CompanyNotFoundException::new);
+            return mapToDto(company);
+        } catch (Exception e) {
+            logger.severe("Error occurred while fetching company by id: " + id + " - " + e.getMessage());
+            throw e;
+        }
+    }
+
+    @Override
     public CompanyDto createCompany(CompanyDto createCompanyDto) {
         try {
             Company company = modelMapper.map(createCompanyDto, Company.class);
@@ -59,7 +72,7 @@ public class CompanyServiceImpl implements CompanyService {
     }
 
     @Override
-    public CompanyDto updateCompany(UUID companyId, CompanyDto updateCompanyDto) {
+    public CompanyDto updateCompany(UUID companyId, UpdateCompanyRequest updateCompanyDto) {
         try {
             Company company = companyRepository.findById(companyId)
                     .orElseThrow(CompanyCustomException.CompanyNotFoundException::new);

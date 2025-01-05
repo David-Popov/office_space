@@ -1,17 +1,23 @@
 package javawizzards.officespace.service.Reservation;
 
 import javawizzards.officespace.dto.Reservation.CreateReservationDto;
+import javawizzards.officespace.dto.Reservation.GetReservationsResponseObject;
 import javawizzards.officespace.dto.Reservation.ReservationDto;
+import javawizzards.officespace.dto.Response.Response;
 import javawizzards.officespace.entity.Event;
 import javawizzards.officespace.entity.OfficeRoom;
 import javawizzards.officespace.entity.Reservation;
 import javawizzards.officespace.entity.User;
+import javawizzards.officespace.enumerations.OfficeRoom.OfficeRoomMessages;
 import javawizzards.officespace.enumerations.Reservation.ReservationStatus;
+import javawizzards.officespace.exception.OfficeRoom.OfficeRoomCustomException;
 import javawizzards.officespace.exception.Reservation.ReservationCustomException;
 import javawizzards.officespace.repository.OfficeRoomRepository;
 import javawizzards.officespace.repository.ReservationRepository;
 import javawizzards.officespace.repository.UserRepository;
 import org.modelmapper.ModelMapper;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -35,6 +41,24 @@ public class ReservationServiceImpl implements ReservationService {
         this.officeRoomRepository = officeRoomRepository;
         this.userRepository = userRepository;
         this.modelMapper = modelMapper;
+    }
+
+    @Override
+    public List<GetReservationsResponseObject> getAllReservations() {
+        try {
+            List<Reservation> reservations = reservationRepository.findAll();
+
+            return reservations.stream()
+                    .map(reservation -> {
+                        GetReservationsResponseObject responseObject = this.modelMapper.map(reservation, GetReservationsResponseObject.class);
+                        responseObject.setUserEmail(reservation.getUser().getEmail());
+                        responseObject.setOfficeRoomName(reservation.getOfficeRoom().getName());
+                        return responseObject;
+                    })
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            throw e;
+        }
     }
 
     @Override
@@ -265,7 +289,11 @@ public class ReservationServiceImpl implements ReservationService {
             if (reservation == null) {
                 throw new ReservationCustomException.ReservationNotFoundException();
             }
-            return modelMapper.map(reservation, ReservationDto.class);
+
+            ReservationDto dto = modelMapper.map(reservation, ReservationDto.class);
+            dto.setUserId(reservation.getUser().getId());
+            dto.setOfficeRoomId(reservation.getOfficeRoom().getId());
+            return dto;
         } catch (ReservationCustomException e) {
             throw e;
         } catch (Exception e) {

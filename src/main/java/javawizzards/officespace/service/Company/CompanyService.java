@@ -6,9 +6,10 @@ import java.util.UUID;
 
 public interface CompanyService {
     CompanyDto createCompany(CompanyDto createCompanyDto);
-    CompanyDto updateCompany(UUID id, CompanyDto updateCompanyDto);
+    CompanyDto updateCompany(UUID id, UpdateCompanyRequest updateCompanyDto);
     void deleteCompany(UUID id);
     CompanyDto findCompanyByName(String name);
+    CompanyDto findCompanyById(UUID id);
     List<CompanyDto> getCompaniesByType(String type); 
     List<CompanyDto> getAllCompanies(); 
 }

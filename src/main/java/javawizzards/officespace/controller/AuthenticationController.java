@@ -119,6 +119,25 @@ public class AuthenticationController {
         }
     }
 
+    @GetMapping("get-current-user")
+    public ResponseEntity<Response<?>> getCurrentUser(){
+        Response<UserDto> response;
+
+        try{
+            UserDto data = this.userService.getCurrentUser();
+
+            if (data == null) {
+                response = new Response<>(UserMessages.USER_NOT_FOUND.getMessage());
+            }
+
+            response = new Response<>(data, HttpStatus.OK, "Fetch logged User");
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @PostMapping("/refresh-token")
     public ResponseEntity<Response<?>> refreshToken(@RequestBody @Valid Request<RefreshTokenRequest> request, BindingResult bindingResult) throws JsonProcessingException {
         Response<?> response;

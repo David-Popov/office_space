@@ -13,7 +13,7 @@ import java.util.UUID;
 @Data
 public class CreateOfficeRoomDto {
     @NotNull(message = "OfficeRoom name can't be null")
-    @JsonProperty("office_room_name")
+    @JsonProperty("officeRoomName")
     private String officeRoomName;
 
     @JsonProperty("address")
@@ -38,12 +38,12 @@ public class CreateOfficeRoomDto {
     @JsonProperty("status")
     private RoomStatus status;
 
-    @JsonProperty("picture_url")
+    @JsonProperty("pictureUrl")
     private String pictureUrl;
 
     @NotNull
     @PositiveOrZero
-    @JsonProperty("price_per_hour")
+    @JsonProperty("pricePerHour")
     private BigDecimal pricePerHour;
 
     @NotNull(message = "Company Id can't be null")

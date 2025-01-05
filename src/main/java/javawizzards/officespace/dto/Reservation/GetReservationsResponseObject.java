@@ -1,35 +1,27 @@
 package javawizzards.officespace.dto.Reservation;
 
-import jakarta.validation.Valid;
-import javawizzards.officespace.dto.User.UserDto;
-import javawizzards.officespace.enumerations.Reservation.ReservationStatus;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import javawizzards.officespace.entity.OfficeRoom;
+import javawizzards.officespace.entity.User;
+import javawizzards.officespace.enumerations.Reservation.ReservationStatus;
+import lombok.Data;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 
-@NoArgsConstructor
-@AllArgsConstructor
-@Getter
-@Setter
-public class ReservationDto {
-
+@Data
+public class GetReservationsResponseObject {
     @JsonProperty("id")
     private UUID id;
 
-    @JsonProperty("reservation_title")
+    @JsonProperty("reservationTitle")
     private String reservationTitle;
 
-    @NotNull(message = "Reservation user id can't be null")
-    @JsonProperty("userUuid")
-    private UUID userId;
+    @NotNull(message = "User email can't be null")
+    @JsonProperty("userEmail")
+    private String userEmail;
 
     @NotNull(message = "Reservation startDateTime can't be null")
     @JsonProperty("startDateTime")
@@ -47,9 +39,9 @@ public class ReservationDto {
     @JsonProperty("status")
     private ReservationStatus status;
 
-    @NotNull(message = "Reservation officeRoomId can't be null")
-    @JsonProperty("officeRoomUuid")
-    private UUID officeRoomId;
+    @NotNull(message = "Office Room name can't be null")
+    @JsonProperty("officeRoomName")
+    private String officeRoomName;
 
     @Valid
     private EventDto event;
