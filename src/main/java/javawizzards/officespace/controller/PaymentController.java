@@ -28,10 +28,7 @@ public class PaymentController {
     }
 
     @PostMapping("/create-session")
-    public ResponseEntity<Response<?>> createSession(
-            @Valid @RequestBody Request<PaymentRequest> request,
-            BindingResult bindingResult) {
-
+    public ResponseEntity<Response<?>> createSession(@Valid @RequestBody Request<PaymentRequest> request, BindingResult bindingResult) {
         Response<?> response = null;
 
         try {
@@ -54,6 +51,7 @@ public class PaymentController {
 
         }
         catch (PaymentCustomException e) {
+            System.out.print("Exception: " + e.getMessage());
             response = new Response<>(e.getMessage());
             return ResponseEntity.badRequest().body(response);}
         catch (Exception e) {

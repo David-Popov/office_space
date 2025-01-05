@@ -2,12 +2,18 @@ package javawizzards.officespace.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.validation.Valid;
+import javawizzards.officespace.dto.Company.CompanyDto;
+import javawizzards.officespace.dto.Company.UpdateCompanyRequest;
 import javawizzards.officespace.dto.Request.Request;
 import javawizzards.officespace.dto.Response.Response;
 import javawizzards.officespace.dto.User.GoogleUserDto;
 import javawizzards.officespace.dto.User.UpdateUserRequest;
+import javawizzards.officespace.enumerations.Company.CompanyMessages;
 import javawizzards.officespace.enumerations.User.UserMessages;
+import javawizzards.officespace.exception.Company.CompanyCustomException;
+import javawizzards.officespace.service.Company.CompanyService;
 import javawizzards.officespace.service.RequestAndResponse.RequestAndResponseService;
+import javawizzards.officespace.service.Reservation.ReservationService;
 import javawizzards.officespace.service.User.UserService;
 import javawizzards.officespace.utility.LoggingUtils;
 import org.springframework.http.HttpStatus;
@@ -22,10 +28,14 @@ import java.util.UUID;
 @RequestMapping("/admin")
 public class AdminController {
     private final UserService userService;
+    private final CompanyService companyService;
+    private final ReservationService reservationService;
     private final RequestAndResponseService requestAndResponseService;
 
-    public AdminController(UserService userService, RequestAndResponseService requestAndResponseService) {
+    public AdminController(UserService userService, CompanyService companyService, ReservationService reservationService, RequestAndResponseService requestAndResponseService) {
         this.userService = userService;
+        this.companyService = companyService;
+        this.reservationService = reservationService;
         this.requestAndResponseService = requestAndResponseService;
     }
 
@@ -114,6 +124,97 @@ public class AdminController {
         } catch (Exception e) {
             response = new Response<>(e.getMessage());
             this.requestAndResponseService.CreateRequestAndResponse(requestId, response, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
+
+    @GetMapping("get-companies")
+    public ResponseEntity<Response<?>> getAllCompanies() {
+        Response<?> response;
+
+        try{
+            var data = this.companyService.getAllCompanies();
+            response = new Response<>(data, HttpStatus.OK, "Companies fetch successful");
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            response = new Response<>(e.getMessage());
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
+
+    @GetMapping("get-company/{id}")
+    public ResponseEntity<Response<?>> getCompany(@PathVariable UUID id) {
+        Response<?> response;
+
+        try{
+            CompanyDto data = this.companyService.findCompanyById(id);
+
+            if (data == null){
+                response = new Response<>(new CompanyCustomException.CompanyNotFoundException().toString());
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+
+            response = new Response<>(data, HttpStatus.OK, "Company fetch successful");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response = new Response<>(e.getMessage());
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
+
+    @PutMapping("/update-company/{id}")
+    public ResponseEntity<Response<?>> updateCompany(@PathVariable UUID id, @RequestBody @Valid Request<UpdateCompanyRequest> request, BindingResult bindingResult) throws JsonProcessingException {
+        Response<?> response;
+
+        if (bindingResult.hasErrors()) {
+            String errorMessage = Objects.requireNonNull(bindingResult.getFieldError()).getDefaultMessage();
+            return ResponseEntity.badRequest().body(new Response<>(errorMessage));
+        }
+
+        try{
+            var data = this.companyService.updateCompany(id, request.getData());
+            response = new Response<>(data, HttpStatus.OK, UserMessages.USER_UPDATE_SUCCESS.getMessage());
+            this.requestAndResponseService.CreateRequestAndResponse(request, response, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            response = new Response<>(e.getMessage());
+            this.requestAndResponseService.CreateRequestAndResponse(request, response, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
+
+    @DeleteMapping("/delete-company/{id}")
+    public ResponseEntity<Response<?>> deleteCompany(@PathVariable UUID id) {
+        Response<?> response;
+        try{
+            if (id.toString().isEmpty()){
+                response = new Response<>(new CompanyCustomException.InvalidCompanyId().toString());
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            this.companyService.deleteCompany(id);
+
+            response = new Response<>(null, HttpStatus.OK, CompanyMessages.COMPANY_DELETED_SUCCESSFULLY.getMessage());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response = new Response<>(e.getMessage());
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
+
+    @GetMapping("get-reservations")
+    public ResponseEntity<Response<?>> getAllReservations() {
+        Response<?> response;
+
+        try{
+            var data = this.reservationService.getAllReservations();
+            response = new Response<>(data, HttpStatus.OK, "Reservation fetch successful");
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            response = new Response<>(e.getMessage());
             return ResponseEntity.internalServerError().body(response);
         }
     }

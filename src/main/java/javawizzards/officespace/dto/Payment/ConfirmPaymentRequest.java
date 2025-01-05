@@ -22,11 +22,11 @@ public class ConfirmPaymentRequest {
     @NotNull(message = "Description cannot be null")
     private String description;
 
-    @JsonProperty("user_id")
+    @JsonProperty("userId")
     @NotNull(message = "User ID cannot be null")
     private UUID userId;
 
-    @JsonProperty("session_id")
+    @JsonProperty("sessionId")
     @NotNull(message = "Session ID cannot be null")
     private String sessionId;
 }

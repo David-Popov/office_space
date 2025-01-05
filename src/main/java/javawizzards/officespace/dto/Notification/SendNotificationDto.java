@@ -15,6 +15,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @NoArgsConstructor
 @Data
 public class SendNotificationDto {
+    @NotNull(message = "Id can't be null")
+    @JsonProperty("Id")
+    private UUID Id;
+
     @NotNull(message = "UserId can't be null")
     @JsonProperty("userId")
     private UUID userId;

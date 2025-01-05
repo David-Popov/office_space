@@ -17,6 +17,7 @@ public interface UserService {
     UserDto registerUser(RegisterUserDto userDto);
     UserDto registerGoogleUser(RegisterGoogleUserDto userDto);
     LoginResponse loginUser(LoginUserDto userDto);
+    UserDto getCurrentUser();
     LoginResponse checkIfRefreshTokenIsValidAndGenerateNewTokens(String email, String refreshToken);
     String loginGoogleUser(LoginGoogleUserDto userDto);
     UserDto updateUser(UUID userId, UpdateUserRequest userRequest);
