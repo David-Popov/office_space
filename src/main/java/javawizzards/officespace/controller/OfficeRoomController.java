@@ -49,7 +49,7 @@ public class OfficeRoomController {
             response = new Response<>(data, HttpStatus.OK, OfficeRoomMessages.OFFICE_ROOMS_FETCH_SUCCESS.getMessage());
             return ResponseEntity.ok(response);
         } catch (OfficeRoomCustomException e) {
-            response = new Response<>(e.getMessage(), HttpStatus.BAD_REQUEST, OfficeRoomMessages.CUSTOM_ERROR.getMessage());
+            response = new Response<>(e.getMessage(), HttpStatus.BAD_REQUEST, e.getMessage());
             return ResponseEntity.badRequest().body(response);
         } catch (Exception e) {
             response = new Response<>(e.getMessage());
@@ -74,7 +74,7 @@ public class OfficeRoomController {
 
             return ResponseEntity.ok(new Response<>(HttpStatus.CREATED, OfficeRoomMessages.OFFICE_ROOM_CREATION_SUCCESS.getMessage()));
         } catch (OfficeRoomCustomException e) {
-            return ResponseEntity.badRequest().body(new Response<>(e.getMessage(), HttpStatus.BAD_REQUEST, OfficeRoomMessages.CUSTOM_ERROR.getMessage()));
+            return ResponseEntity.badRequest().body(new Response<>(e.getMessage(), HttpStatus.BAD_REQUEST, e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body(new Response<>(e.getMessage()));
         }
@@ -94,7 +94,7 @@ public class OfficeRoomController {
             requestAndResponseService.CreateRequestAndResponse(request, response, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
             return ResponseEntity.status(HttpStatus.NO_CONTENT).body(response);
         } catch (OfficeRoomCustomException e) {
-            Response<Void> errorResponse = new Response<>(e.getMessage(), HttpStatus.BAD_REQUEST, OfficeRoomMessages.CUSTOM_ERROR.getMessage());
+            Response<Void> errorResponse = new Response<>(e.getMessage(), HttpStatus.BAD_REQUEST, e.getMessage());
             Request<UUID> request = new Request<>();
             request.setRequestId(UUID.randomUUID().toString());
             request.setData(id);
@@ -124,7 +124,7 @@ public class OfficeRoomController {
             requestAndResponseService.CreateRequestAndResponse(request, response, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
             return ResponseEntity.ok(response);
         } catch (OfficeRoomCustomException e) {
-            Response<OfficeRoomDto> errorResponse = new Response<>(e.getMessage(), HttpStatus.BAD_REQUEST, OfficeRoomMessages.CUSTOM_ERROR.getMessage());
+            Response<OfficeRoomDto> errorResponse = new Response<>(e.getMessage(), HttpStatus.BAD_REQUEST, e.getMessage());
             requestAndResponseService.CreateRequestAndResponse(request, errorResponse, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
             return ResponseEntity.badRequest().body(errorResponse);
         } catch (Exception e) {
@@ -133,7 +133,7 @@ public class OfficeRoomController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Response<OfficeRoomDto>> getOfficeRoomById(@PathVariable UUID id) throws JsonProcessingException {
+    public ResponseEntity<Response<OfficeRoomDto>> getOfficeRoomById(@PathVariable UUID id) {
         try {
             OfficeRoomDto officeRoom = officeRoomService.findOfficeRoomById(id);
             Response<OfficeRoomDto> response = new Response<>(officeRoom, HttpStatus.OK, OfficeRoomMessages.OFFICE_ROOM_FETCH_SUCCESS.getMessage());
@@ -145,7 +145,7 @@ public class OfficeRoomController {
             requestAndResponseService.CreateRequestAndResponse(request, response, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
             return ResponseEntity.ok(response);
         } catch (OfficeRoomCustomException e) {
-            Response<OfficeRoomDto> errorResponse = new Response<>(e.getMessage(), HttpStatus.BAD_REQUEST, OfficeRoomMessages.CUSTOM_ERROR.getMessage());
+            Response<OfficeRoomDto> errorResponse = new Response<>(e.getMessage(), HttpStatus.BAD_REQUEST, e.getMessage());
             Request<UUID> request = new Request<>();
             request.setRequestId(UUID.randomUUID().toString());
             request.setData(id);
@@ -176,7 +176,7 @@ public ResponseEntity<Response<List<OfficeRoomDto>>> filterOfficeRooms(
         Response<List<OfficeRoomDto>> response = new Response<>(filteredOfficeRooms, HttpStatus.OK, OfficeRoomMessages.OFFICE_ROOMS_FETCH_SUCCESS.getMessage());
         return ResponseEntity.ok(response);
     } catch (OfficeRoomCustomException e) {
-        return ResponseEntity.badRequest().body(new Response<>(e.getMessage(), HttpStatus.BAD_REQUEST, OfficeRoomMessages.CUSTOM_ERROR.getMessage()));
+        return ResponseEntity.badRequest().body(new Response<>(e.getMessage(), HttpStatus.BAD_REQUEST, e.getMessage()));
     } catch (Exception e) {
         return ResponseEntity.internalServerError().body(new Response<>(e.getMessage()));
     }
@@ -197,7 +197,7 @@ public ResponseEntity<Response<List<OfficeRoomDto>>> filterOfficeRooms(
             requestAndResponseService.CreateRequestAndResponse(request, response, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
             return ResponseEntity.ok(response);
         } catch (OfficeRoomCustomException e) {
-            Response<List<OfficeRoomDto>> errorResponse = new Response<>(e.getMessage(), HttpStatus.BAD_REQUEST, OfficeRoomMessages.CUSTOM_ERROR.getMessage());
+            Response<List<OfficeRoomDto>> errorResponse = new Response<>(e.getMessage(), HttpStatus.BAD_REQUEST, e.getMessage());
             Request<UUID> request = new Request<>();
             request.setRequestId(UUID.randomUUID().toString());
             request.setData(UUID.randomUUID());
@@ -229,7 +229,7 @@ public ResponseEntity<Response<List<OfficeRoomDto>>> filterOfficeRooms(
             return ResponseEntity.internalServerError().body(new Response<>(
                     null,
                     HttpStatus.INTERNAL_SERVER_ERROR,
-                    OfficeRoomMessages.CUSTOM_ERROR.getMessage()
+                    e.getMessage()
             ));
         }
     }
@@ -255,7 +255,7 @@ public ResponseEntity<Response<List<OfficeRoomDto>>> filterOfficeRooms(
             return ResponseEntity.internalServerError().body(new Response<>(
                     null,
                     HttpStatus.INTERNAL_SERVER_ERROR,
-                    OfficeRoomMessages.CUSTOM_ERROR.getMessage()
+                    e.getMessage()
             ));
         }
     }
@@ -281,7 +281,7 @@ public ResponseEntity<Response<List<OfficeRoomDto>>> filterOfficeRooms(
             return ResponseEntity.internalServerError().body(new Response<>(
                     null,
                     HttpStatus.INTERNAL_SERVER_ERROR,
-                    OfficeRoomMessages.CUSTOM_ERROR.getMessage()
+                    e.getMessage()
             ));
         }
     }

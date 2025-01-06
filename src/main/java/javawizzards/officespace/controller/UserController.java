@@ -47,7 +47,7 @@ public class UserController {
             return ResponseEntity.ok(response);
 
         } catch (UserCustomException e) {
-            response = new Response<>(e.getMessage());
+            response = new Response<>(e.getMessage(), HttpStatus.BAD_REQUEST, e.getMessage());
             this.requestAndResponseService.CreateRequestAndResponse("Id:" + id, response, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
             return ResponseEntity.badRequest().body(response);
         } catch (Exception e) {
@@ -70,7 +70,7 @@ public class UserController {
             return ResponseEntity.ok(response);
     
         } catch (UserCustomException e) {
-            response = new Response<>(e.getMessage());
+            response = new Response<>(e.getMessage(), HttpStatus.BAD_REQUEST, e.getMessage());
         
             return ResponseEntity.badRequest().body(response);
     
