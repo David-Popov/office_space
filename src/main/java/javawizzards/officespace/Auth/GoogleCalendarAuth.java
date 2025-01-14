@@ -19,7 +19,6 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.context.annotation.Bean;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import org.springframework.beans.factory.annotation.Value;
 
@@ -30,7 +29,6 @@ import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 @Component
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
@@ -38,29 +36,17 @@ public class GoogleCalendarAuth {
 
     private final GoogleCalendarLibConfig config;
 
-    //public static final String APPLICATION_NAME = "Office Space Reservation";
     @Value("${google.calendar.application-name}")
     private String googleCalendarApplicationName;
 
-    // If modifying these scopes, delete your previously saved tokens folder
     private static final List<String> SCOPES = Collections.singletonList(CalendarScopes.CALENDAR);
     private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
 
-    //private static final String TOKENS_DIRECTORY_PATH = "tokens";
     @Value("${google.calendar.tokens-directory-path}")
     private String tokensDirectoryPath;
 
     @Value("${google.calendar.credentials-directory-path}")
     private String credentialsDirectoryPath;
-
-    @Value("${google.calendar.client-id}")
-    private String clientId;
-
-    @Value("${google.calendar.client-secret}")
-    private String clientSecret;
-
-    @Value("${google.calendar.redirect-uri}")
-    private String redirectUri;
 
     @Bean
     @SneakyThrows
@@ -75,7 +61,7 @@ public class GoogleCalendarAuth {
                     .build();
 
         } catch (GeneralSecurityException | IOException e) {
-            throw new GoogleCalendarLibException("Error to get Google Calendar Service", e);
+            throw new GoogleCalendarLibException.ErrorGettingGoogleCalendarService();
         }
     }
 
@@ -86,7 +72,6 @@ public class GoogleCalendarAuth {
         GoogleClientSecrets clientSecrets = getClientSecrets(pathCredentials);
 
         try {
-            // Build flow and trigger user authorization request.
             GoogleAuthorizationCodeFlow flow =
                     new GoogleAuthorizationCodeFlow.Builder(
                             httpTransport, JSON_FACTORY, clientSecrets, SCOPES)
@@ -98,25 +83,24 @@ public class GoogleCalendarAuth {
             return new AuthorizationCodeInstalledApp(flow, receiver).authorize("user");
 
         } catch (Exception e) {
-            throw new GoogleCalendarLibException("Error get Google Api Client OAuth Credential", e);
+            throw new GoogleCalendarLibException.ErrorGettingGoogleApiCredentials();
         }
     }
 
     @SneakyThrows
     private GoogleClientSecrets getClientSecrets(final String pathCredentials) {
-        try (InputStream inputStream = getInputStream(pathCredentials)) {
+        try (InputStream inputStream = loadGoogleCredentialsFile(pathCredentials)) {
             return loadGoogleClientSecrets(inputStream);
         }
     }
 
     @SneakyThrows
-    private InputStream getInputStream(String pathCredentials) {
+    private InputStream loadGoogleCredentialsFile(String pathCredentials) {
         try {
             Path path = Paths.get(credentialsDirectoryPath, "google-credentials.json");
-            return Files.newInputStream(Paths.get(path.toString()));
-
+            return Files.newInputStream(path);
         } catch (IOException e) {
-            throw new GoogleCalendarLibException("Resource not found: google-credentials.json", e);
+            throw new GoogleCalendarLibException.ResourceNotFoundGoogleCredentials();
         }
     }
 
@@ -125,7 +109,7 @@ public class GoogleCalendarAuth {
         try {
             return GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(inputStream));
         } catch (IOException e) {
-            throw new GoogleCalendarLibException("Error to get GoogleClientSecrets", e);
+            throw new GoogleCalendarLibException.ErrorLoadingGoogleClientSecrets();
         }
     }
 }
