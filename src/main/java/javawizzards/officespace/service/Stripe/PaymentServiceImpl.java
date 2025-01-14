@@ -13,12 +13,14 @@ import javawizzards.officespace.dto.Payment.*;
 import javawizzards.officespace.dto.Response.Response;
 import javawizzards.officespace.entity.Payment;
 import javawizzards.officespace.entity.User;
+import javawizzards.officespace.enumerations.Notification.NotificationType;
 import javawizzards.officespace.enumerations.Payment.PaymentMessages;
 import javawizzards.officespace.enumerations.Payment.PaymentStatus;
 import javawizzards.officespace.enumerations.Util.Urls;
 import javawizzards.officespace.exception.Payment.PaymentCustomException;
 import javawizzards.officespace.repository.PaymentRepository;
 import javawizzards.officespace.service.Email.EmailService;
+import javawizzards.officespace.service.Notification.NotificationService;
 import javawizzards.officespace.service.User.UserService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,6 +30,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -41,13 +44,15 @@ public class PaymentServiceImpl implements PaymentService {
     private final ModelMapper modelMapper;
     private final PaymentRepository paymentRepository;
     private final EmailService emailService;
+    private final NotificationService notificationService;
 
     public PaymentServiceImpl(UserService userService, ModelMapper modelMapper,
-                          PaymentRepository paymentRepository, EmailService emailService) {
+                              PaymentRepository paymentRepository, EmailService emailService, NotificationService notificationService) {
         this.userService = userService;
         this.modelMapper = modelMapper;
         this.paymentRepository = paymentRepository;
         this.emailService = emailService;
+        this.notificationService = notificationService;
     }
 
     @PostConstruct
@@ -103,6 +108,19 @@ public class PaymentServiceImpl implements PaymentService {
             payment.setStatus(status);
 
             payment = paymentRepository.save(payment);
+
+            String notificationMessage = String.format(
+                    "Payment of %s %s has been confirmed for %s",
+                    payment.getAmount(),
+                    payment.getCurrency().toUpperCase(),
+                    payment.getDescription()
+            );
+
+            notificationService.sendSystemNotification(
+                    notificationMessage,
+                    NotificationType.PAYMENT_CONFIRMATION,
+                    List.of(payment.getUser().getId())
+            );
 
             return modelMapper.map(payment, PaymentResponse.class);
         }

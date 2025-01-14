@@ -1,5 +1,6 @@
 package javawizzards.officespace.service.Reservation;
 
+import jakarta.mail.MessagingException;
 import javawizzards.officespace.dto.Reservation.CreateReservationDto;
 import javawizzards.officespace.dto.Reservation.GetReservationsResponseObject;
 import javawizzards.officespace.dto.Reservation.ReservationDto;
@@ -15,11 +16,14 @@ import javawizzards.officespace.exception.Reservation.ReservationCustomException
 import javawizzards.officespace.repository.OfficeRoomRepository;
 import javawizzards.officespace.repository.ReservationRepository;
 import javawizzards.officespace.repository.UserRepository;
+import javawizzards.officespace.service.Email.EmailService;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -32,15 +36,17 @@ public class ReservationServiceImpl implements ReservationService {
     private final OfficeRoomRepository officeRoomRepository;
     private final UserRepository userRepository;
     private final ModelMapper modelMapper;
+    private final EmailService emailService;
 
     public ReservationServiceImpl(ReservationRepository reservationRepository,
                                   OfficeRoomRepository officeRoomRepository,
                                   UserRepository userRepository,
-                                  ModelMapper modelMapper) {
+                                  ModelMapper modelMapper, EmailService emailService) {
         this.reservationRepository = reservationRepository;
         this.officeRoomRepository = officeRoomRepository;
         this.userRepository = userRepository;
         this.modelMapper = modelMapper;
+        this.emailService = emailService;
     }
 
     @Override
@@ -113,6 +119,9 @@ public class ReservationServiceImpl implements ReservationService {
 
             Reservation savedReservation = reservationRepository.save(reservation);
             userRepository.save(user);
+
+            this.sendReservationConfirmationEmail(savedReservation, officeRoom, user);
+
             return mapToDto(savedReservation);
         } catch (ReservationCustomException e) {
             throw e;
@@ -298,6 +307,44 @@ public class ReservationServiceImpl implements ReservationService {
             throw e;
         } catch (Exception e) {
             throw new RuntimeException("Error mapping reservation to DTO", e);
+        }
+    }
+
+    private void sendReservationConfirmationEmail(Reservation reservation, OfficeRoom officeRoom, User user) throws MessagingException {
+        try {
+            String confirmationNumber = reservation.getId().toString();
+            String reservationUrl = "http://localhost:5173/profile";
+
+            DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("MMMM d, yyyy");
+            DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
+
+            String date = reservation.getStartDateTime().format(dateFormatter);
+            String startTime = reservation.getStartDateTime().format(timeFormatter);
+            String endTime = reservation.getEndDateTime().format(timeFormatter);
+
+            List<String> roomResources = officeRoom.getResources().stream()
+                    .map(resource -> resource.getName())
+                    .collect(Collectors.toList());
+
+            String totalPrice = "$" + officeRoom.getPricePerHour().multiply(
+                    BigDecimal.valueOf(reservation.getDurationAsHours())).toString();
+
+            emailService.sendReservationConfirmation(
+                    user.getEmail(),
+                    user.getUsername(),
+                    officeRoom.getName(),
+                    date,
+                    startTime,
+                    endTime,
+                    officeRoom.getBuilding(),
+                    officeRoom.getFloor(),
+                    totalPrice,
+                    roomResources,
+                    confirmationNumber,
+                    reservationUrl
+            );
+        } catch (MessagingException e) {
+            throw e;
         }
     }
 }
