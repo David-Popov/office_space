@@ -200,7 +200,7 @@ private List<Department> createDepartmentsForCompany(Company company) {
         room.setType(type);
         room.setCapacity(capacity);
         room.setStatus(RoomStatus.AVAILABLE);
-        room.setPictureUrl("https://example.com/rooms/" + name.toLowerCase().replace(" ", "-") + ".jpg");
+        room.setPictureUrl("https://www.wbdg.org/images/officespace_6.jpg");
         room.setPricePerHour(pricePerHour);
         room.setCompany(company);
         room.setReservations(new ArrayList<>());

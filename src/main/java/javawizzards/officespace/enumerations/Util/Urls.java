@@ -1,8 +1,8 @@
 package javawizzards.officespace.enumerations.Util;
 
 public enum Urls {
-    PAYMENT_SUCCESS_REDIRECT("http://localhost:8087/swagger-ui/index.html"),
-    PAYMENT_FAILURE_REDIRECT("http://localhost:8087/swagger-ui/index.html");
+    PAYMENT_SUCCESS_REDIRECT("http://localhost:5173/payment-success"),
+    PAYMENT_FAILURE_REDIRECT("http://localhost:5173/payment-failure");
 
     private final String returnUrl;
 

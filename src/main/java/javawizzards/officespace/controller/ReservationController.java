@@ -8,6 +8,7 @@ import javawizzards.officespace.enumerations.Reservation.ReservationMessages;
 import javawizzards.officespace.dto.Request.Request;
 import javawizzards.officespace.dto.Reservation.ReservationDto;
 import javawizzards.officespace.exception.Reservation.ReservationCustomException;
+import javawizzards.officespace.service.GoogleCalendar.GoogleCalendarService;
 import javawizzards.officespace.service.Reservation.ReservationService;
 import javawizzards.officespace.service.RequestAndResponse.RequestAndResponseService;
 import javawizzards.officespace.utility.LoggingUtils;
@@ -26,12 +27,13 @@ public class ReservationController {
 
     private final ReservationService reservationService;
     private final RequestAndResponseService requestAndResponseService;
+    private final GoogleCalendarService googleCalendarService;
 
-    public ReservationController(ReservationService reservationService, RequestAndResponseService requestAndResponseService) {
+    public ReservationController(ReservationService reservationService, RequestAndResponseService requestAndResponseService, GoogleCalendarService googleCalendarService) {
         this.reservationService = reservationService;
         this.requestAndResponseService = requestAndResponseService;
+        this.googleCalendarService = googleCalendarService;
     }
-
     @PostMapping("/create")
     public ResponseEntity<Response<String>> createReservation(
             @RequestBody @Valid Request<CreateReservationDto> request,
@@ -52,12 +54,14 @@ public class ReservationController {
                 return ResponseEntity.badRequest().body(response);
             }
 
+            googleCalendarService.createEvent(request.getData());
+
             response = new Response<>(HttpStatus.CREATED, ReservationMessages.RESERVATION_SUCCESS.getMessage());
             this.requestAndResponseService.CreateRequestAndResponse(request, response, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
             return ResponseEntity.ok(response);
 
         } catch (ReservationCustomException e) {
-            Response<String> errorResponse = new Response<>(e.getMessage());
+            Response<String> errorResponse = new Response<>(e.getMessage(), HttpStatus.BAD_REQUEST, e.getMessage());
             this.requestAndResponseService.CreateRequestAndResponse(request, errorResponse, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
             return ResponseEntity.badRequest().body(errorResponse);
         } catch (Exception e) {
@@ -81,7 +85,7 @@ public class ReservationController {
             requestAndResponseService.CreateRequestAndResponse(request, response, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
             return ResponseEntity.status(HttpStatus.NO_CONTENT).body(response);
         } catch (ReservationCustomException e) {
-            Response<Void> errorResponse = new Response<>(e.getMessage());
+            Response<Void> errorResponse = new Response<>(e.getMessage(), HttpStatus.BAD_REQUEST, e.getMessage());
             requestAndResponseService.CreateRequestAndResponse(request, errorResponse, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
             return ResponseEntity.badRequest().body(errorResponse);
         } catch (Exception e) {
@@ -112,7 +116,7 @@ public class ReservationController {
             requestAndResponseService.CreateRequestAndResponse(request, response, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
             return ResponseEntity.ok(response);
         } catch (ReservationCustomException e) {
-            Response<ReservationDto> errorResponse = new Response<>(e.getMessage());
+            Response<ReservationDto> errorResponse = new Response<>(e.getMessage(), HttpStatus.BAD_REQUEST, e.getMessage());
             requestAndResponseService.CreateRequestAndResponse(request, errorResponse, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
             return ResponseEntity.badRequest().body(errorResponse);
         } catch (Exception e) {
@@ -136,7 +140,7 @@ public class ReservationController {
             requestAndResponseService.CreateRequestAndResponse(request, response, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
             return ResponseEntity.ok(response);
         } catch (ReservationCustomException e) {
-            Response<ReservationDto> errorResponse = new Response<>(e.getMessage());
+            Response<ReservationDto> errorResponse = new Response<>(e.getMessage(), HttpStatus.BAD_REQUEST, e.getMessage());
             requestAndResponseService.CreateRequestAndResponse(request, errorResponse, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
             return ResponseEntity.badRequest().body(errorResponse);
         } catch (Exception e) {
@@ -160,7 +164,7 @@ public class ReservationController {
             requestAndResponseService.CreateRequestAndResponse(request, response, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
             return ResponseEntity.ok(response);
         } catch (ReservationCustomException e) {
-            Response<List<ReservationDto>> errorResponse = new Response<>(e.getMessage());
+            Response<List<ReservationDto>> errorResponse = new Response<>(e.getMessage(), HttpStatus.BAD_REQUEST, e.getMessage());
             requestAndResponseService.CreateRequestAndResponse(request, errorResponse, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
             return ResponseEntity.badRequest().body(errorResponse);
         } catch (Exception e) {
@@ -184,7 +188,7 @@ public class ReservationController {
             requestAndResponseService.CreateRequestAndResponse(request, response, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
             return ResponseEntity.ok(response);
         } catch (ReservationCustomException e) {
-            Response<List<ReservationDto>> errorResponse = new Response<>(e.getMessage());
+            Response<List<ReservationDto>> errorResponse = new Response<>(e.getMessage(), HttpStatus.BAD_REQUEST, e.getMessage());
             requestAndResponseService.CreateRequestAndResponse(request, errorResponse, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
             return ResponseEntity.badRequest().body(errorResponse);
         } catch (Exception e) {
@@ -205,7 +209,7 @@ public class ReservationController {
             requestAndResponseService.CreateRequestAndResponse(request, response, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
             return ResponseEntity.ok(response);
         } catch (ReservationCustomException e) {
-            Response<List<String>> errorResponse = new Response<>(e.getMessage());
+            Response<List<String>> errorResponse = new Response<>(e.getMessage(), HttpStatus.BAD_REQUEST, e.getMessage());
             requestAndResponseService.CreateRequestAndResponse(request, errorResponse, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
             return ResponseEntity.badRequest().body(errorResponse);
         } catch (Exception e) {
@@ -214,4 +218,5 @@ public class ReservationController {
             return ResponseEntity.internalServerError().body(errorResponse);
         }
     }
+
 }

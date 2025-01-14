@@ -83,7 +83,7 @@ public class NotificationController {
         }
     }
 
-    @PatchMapping("/notifications/{notificationId}/read")
+    @PatchMapping("/read/{notificationId}")
     public ResponseEntity<Response<String>> markNotificationAsRead(@PathVariable UUID notificationId) {
         try {
             notificationService.markNotificationAsRead(notificationId);

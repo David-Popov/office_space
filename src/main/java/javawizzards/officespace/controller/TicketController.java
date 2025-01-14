@@ -78,7 +78,7 @@ public class TicketController {
             return ResponseEntity.ok(response);
     
         } catch (TicketCustomException e) {
-            Response<String> errorResponse = new Response<>(e.getMessage());
+            Response<String> errorResponse = new Response<>(e.getMessage(), HttpStatus.BAD_REQUEST, e.getMessage());
             this.requestAndResponseService.CreateRequestAndResponse(request, errorResponse, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
             return ResponseEntity.badRequest().body(errorResponse);
         } catch (Exception e) {
@@ -137,7 +137,7 @@ public class TicketController {
             requestAndResponseService.CreateRequestAndResponse(request, response, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
             return ResponseEntity.status(HttpStatus.NO_CONTENT).body(response);
         } catch (TicketCustomException e) {
-            Response<Void> errorResponse = new Response<>(e.getMessage());
+            Response<Void> errorResponse = new Response<>(e.getMessage(), HttpStatus.BAD_REQUEST, e.getMessage());
             requestAndResponseService.CreateRequestAndResponse(request, errorResponse, LoggingUtils.logControllerName(this), LoggingUtils.logMethodName());
             return ResponseEntity.badRequest().body(errorResponse);
         } catch (Exception e) {

@@ -27,7 +27,7 @@ public class OfficeRoomDto{
     private UUID id;
 
     @NotNull(message = "OfficeRoom name can't be null")
-    @JsonProperty("office_room_name")
+    @JsonProperty("officeRoomName")
     private String officeRoomName;
 
     @JsonProperty("address")
@@ -52,12 +52,12 @@ public class OfficeRoomDto{
     @JsonProperty("status")
     private RoomStatus status;
 
-    @JsonProperty("picture_url")
+    @JsonProperty("pictureUrl")
     private String pictureUrl;
 
     @NotNull
     @PositiveOrZero
-    @JsonProperty("price_per_hour")
+    @JsonProperty("pricePerHour")
     private BigDecimal pricePerHour;
 
     @NotNull(message = "Company information can't be null")

@@ -63,10 +63,8 @@ public class OfficeRoomServiceImpl implements OfficeRoomService {
             return officeRooms.stream()
                     .map(this::mapToDto)
                     .collect(Collectors.toList());
-        } catch (OfficeRoomCustomException e) {
-            throw e;
         } catch (Exception e) {
-            throw new OfficeRoomCustomException.OfficeRoomCreationFailedException();
+            throw e;
         }
     }
 

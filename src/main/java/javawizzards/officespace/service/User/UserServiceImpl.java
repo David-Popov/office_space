@@ -9,6 +9,9 @@ import javawizzards.officespace.repository.UserRepository;
 import javawizzards.officespace.service.JwtService.JwtService;
 import javawizzards.officespace.service.Role.RoleService;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -99,7 +102,11 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             List<User> users = this.userRepository.findAll();
 
             return users.stream()
-                    .map(user -> modelMapper.map(user, UserDto.class))
+                    .map(user -> {
+                        UserDto dto = modelMapper.map(user, UserDto.class);
+                        this.setUserDtoRoleName(dto, user.getRole());
+                        return dto;
+                    })
                     .collect(Collectors.toList());
         } catch (UserCustomException e) {
             throw e;
@@ -134,7 +141,9 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
             User user = userRepository.findByEmail(email).orElseThrow(() -> new UserCustomException.UserNotFoundException());
 
-            return this.MapUserToDto(user);
+            UserDto userDto = this.MapUserToDto(user);
+            setUserDtoRoleName(userDto, user.getRole());
+            return userDto;
         } catch (UserCustomException e) {
             throw e;
         } catch (Exception e) {
@@ -246,6 +255,21 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         } catch (Exception e) {
             throw e;
         }
+    }
+
+    public UserDto getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated() ||
+                authentication instanceof AnonymousAuthenticationToken) {
+            throw new RuntimeException("No authenticated user found");
+        }
+
+        String email = authentication.getName(); // Gets username/email used during authentication
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserCustomException.UserNotFoundException());
+
+        return this.modelMapper.map(user, UserDto.class);
     }
 
     @Override

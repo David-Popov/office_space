@@ -117,6 +117,8 @@ public class PaymentServiceImpl implements PaymentService {
     public SessionResponse createCheckoutSession(PaymentRequest paymentRequest) {
         Stripe.apiKey = secretKey;
 
+        System.out.print(paymentRequest);
+
         try {
             if (paymentRequest == null) {
                 throw new PaymentCustomException.PaymentValidationException();

@@ -12,10 +12,6 @@ import java.util.UUID;
 @AllArgsConstructor
 public class PaymentRequest {
 
-    @NotNull(message = "Source cannot be null")
-    @JsonProperty("source")
-    public String source;
-
     @NotNull(message = "Amount cannot be null")
     @JsonProperty("amount")
     public BigDecimal amount;
@@ -27,10 +23,6 @@ public class PaymentRequest {
     @NotNull(message = "Description cannot be null")
     @JsonProperty("description")
     public String description;
-
-    @NotNull(message = "Count cannot be null")
-    @JsonProperty("count")
-    public String count;
 
     @NotNull(message = "Quantity cannot be null")
     @JsonProperty("quantity")
