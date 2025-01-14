@@ -1,5 +1,8 @@
 # OfficeSpace
 
+**⚠️ Note:** *Delete the tests folder (optional but recommended):
+Before installing the dependencies and building the project, it is recommended to delete the tests folder because the current tests are failing and would cause the process to break.*
+
 **Note:** *The current version of the Office Space Management System is being developed on the* **development branch**. *For the most up-to-date changes and features, please ensure that you are working with this branch instead of main.*
 
 ## Overview
