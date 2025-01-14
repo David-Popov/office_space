@@ -77,6 +77,8 @@ The Office Space Management System is a comprehensive backend solution for manag
 
 ```
 javawizzards.officespace/
+├── Auth/
+│   └── GoogleCalendarAuth
 ├── configuration/                 # Configuration classes
 ├── controller/                    # REST API controllers
 ├── DatabaseInitializers/         
@@ -87,6 +89,7 @@ javawizzards.officespace/
 ├── exception/                    # Custom exceptions
 │   ├── Company/
 │   ├── Department/
+│   ├── GoogleCendar/
 │   ├── Notification/
 │   ├── OfficeRoom/
 │   ├── Payment/
@@ -101,6 +104,7 @@ javawizzards.officespace/
     ├── Department/
     ├── Email/
     │   └── EmailService.java
+    ├── GoogleCalendar/     
     ├── JwtService/
     ├── Notification/
     ├── OfficeRoom/
@@ -234,15 +238,39 @@ cd office-space-management
 ```bash
 mvn install
 ```
-
+If you encounter any issues with dependencies, try the following commands to resolve them:
+- Clean the project:
+```bash
+mvn clean
+```
+- Purge local repository dependencies:
+```bash
+mvn dependency:purge-local-repository
+```
+- Resolve dependencies:
+```bash
+mvn dependency:resolve
+```
+- Reinstall dependencies:
+```bash
+mvn install
+```
+- Reload Maven projects 
 4. Configure database connection in `application.properties`
 ```properties
 spring.datasource.url=jdbc:postgresql://localhost:5432/officespace
 spring.datasource.username=your_username
 spring.datasource.password=your_password
 ```
+5. Google Calendar API Configuration
+- Set up your Google Calendar API by configuring the following properties in the application.properties file:
+```properties
+google.calendar.application-name=${GOOGLE_CALENDAR_APPLICATION_NAME}
+google.calendar.tokens-directory-path=${GOOGLE_CALENDAR_TOKENS_DIRECTORY_PATH}
+google.calendar.credentials-directory-path=${GOOGLE_CALENDAR_CREDENTIALS_DIRECTORY_PATH}
+```
 
-5. Run the application
+7. Run the application
 ```bash
 mvn spring-boot:run
 ```
