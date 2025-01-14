@@ -1,5 +1,7 @@
 # OfficeSpace
 
+**Note:** *The current version of the Office Space Management System is being developed on the* **development branch**. *For the most up-to-date changes and features, please ensure that you are working with this branch instead of main.*
+
 ## Overview
 The Office Space Management System is a comprehensive backend solution for managing office spaces, room reservations, and resources. Built with Spring Boot, this system enables companies to efficiently manage their office spaces, track resources, and handle room reservations.
 
