@@ -33,7 +33,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .cors(Customizer.withDefaults())
-                .csrf(csrf -> csrf.disable())
+                .csrf(csrf -> csrf.disable())//Cross site request forgery is disabled because we use JWT (stateless)
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(
                                 "/",
